@@ -4,7 +4,7 @@ from organization.models import Organization, Roles
 
 
 class User(AbstractUser):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='org_users')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_users', null=True, blank=True)
     roles = models.ManyToManyField(Roles, related_name='role_users')
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
