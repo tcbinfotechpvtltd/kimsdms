@@ -8,6 +8,7 @@ class User(AbstractUser):
     roles = models.ManyToManyField(Roles, related_name='role_users')
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
 
 
 
