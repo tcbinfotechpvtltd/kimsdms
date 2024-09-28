@@ -2,10 +2,10 @@ from rest_framework import serializers
 from .models import User
 from organization.models import Roles, Organization
 
-class RolesSerializer(serializers.ModelSerializer):
+class RolesDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Roles
-        fields = ['id', 'name']  # Assuming Roles has 'id' and 'name' fields
+        fields = ['id', 'role_name']  # Assuming Roles has 'id' and 'name' fields
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
         allow_null=True,  # Allow null values
         source='organization'
     )
-    roles = RolesSerializer(many=True, read_only=True)  # Read-only field for roles
+    roles = RolesDataSerializer(many=True, read_only=True)  # Read-only field for roles
     role_ids = serializers.PrimaryKeyRelatedField(
         queryset=Roles.objects.all(), 
         many=True, 
