@@ -1,3 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import RecordLog, RecordDocument, Record, Organization, Roles
+
+admin.site.register(RecordLog)
+admin.site.register(RecordDocument)
+admin.site.register(Record)
+admin.site.register(Organization)
+admin.site.register(Roles)
