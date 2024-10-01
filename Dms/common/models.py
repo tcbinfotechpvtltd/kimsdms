@@ -7,3 +7,21 @@ class TimeStamp(models.Model):
 
     class Meta:
         abstract = True
+
+class CreatorUpdator(models.Model):
+    created_by = models.ForeignKey(
+        'users.User', 
+        on_delete=models.CASCADE, 
+        related_name='%(class)s_created_by_user'
+    )
+    updated_by = models.ForeignKey(
+        'users.User', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='%(class)s_updated_by_user'
+    )
+
+    class Meta:
+        abstract = True
+

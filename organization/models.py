@@ -1,6 +1,6 @@
 from django.db import models
+from Dms.common.models import CreatorUpdator, TimeStamp
 
-from Dms.common.models import TimeStamp
 
 class Organization(models.Model):
     name = models.CharField(max_length=500)
@@ -14,6 +14,7 @@ class Organization(models.Model):
 class Roles(TimeStamp):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_roles')
     role_name = models.CharField(max_length=100)
+    next_lavel = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
 
@@ -22,7 +23,9 @@ class Roles(TimeStamp):
 
 
 
-class PurchaseOrder(models.Model):
+class Record(TimeStamp):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True)
+
     department = models.CharField(max_length=255, verbose_name="Name of the School / Department")
     po_number = models.CharField(max_length=50, verbose_name="PO Number")
     po_date = models.DateField(verbose_name="PO Date")
@@ -42,15 +45,31 @@ class PurchaseOrder(models.Model):
         return f"PO {self.po_number} - {self.supplier_name}"
 
     class Meta:
-        verbose_name = "Purchase Order"
-        verbose_name_plural = "Purchase Orders"
+        verbose_name = "Record"
+        verbose_name_plural = "Records"
+
+
+
 
 
 def get_upload_path(instance, file_name):
     return f'PursesOrder/{instance.id}/{file_name}'
 
-class PurchaseOrderDocumnet(models.Model):
-    order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='purses_order')
+class RecordDocument(CreatorUpdator):
+    record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='documents')
     file = models.FileField(upload_to=get_upload_path)
-    file_size = models.FloatField()
+    file_size = models.FloatField(null=True, blank=True)
+    
 
+
+
+class RecordLog(CreatorUpdator, TimeStamp):
+    ACTIONS = (
+        ('apporved', 'approved'),
+        ('rejected', 'rejected'),
+
+    )
+    record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='logs')
+    action = models.CharField(choices=ACTIONS)
+    comment = models.TextField(null=True, blank=True)
+    role_level = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True)
