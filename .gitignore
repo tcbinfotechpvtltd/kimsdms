@@ -45,4 +45,5 @@ celerybeat-schedule
 db.sqlite3
 server.sh
 dump.rdb
+organization/migrations/
 

@@ -23,7 +23,7 @@ class Roles(TimeStamp):
 
 
 
-class Record(models.Model):
+class Record(TimeStamp):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True)
 
     department = models.CharField(max_length=255, verbose_name="Name of the School / Department")
