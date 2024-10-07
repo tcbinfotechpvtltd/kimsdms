@@ -31,6 +31,7 @@ class LoginView(APIView):
                         'token': openapi.Schema(type=openapi.TYPE_STRING, description='Authentication Token'),
                         'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
                         'is_admin': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Is the user an admin?'),
+                        'user_name': openapi.Schema(type=openapi.TYPE_STRING,description='Username')
                     }
                 )
             ),
@@ -44,6 +45,6 @@ class LoginView(APIView):
         user = authenticate(username=data['username'], password=data['password'])
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'user_id': user.id, 'is_admin': user.is_admin})
+            return Response({'token': token.key, 'user_id': user.id, 'is_admin': user.is_admin, 'username': user.username})
         else:
             return Response({'error': 'Invalid credentials'}, status=401)
