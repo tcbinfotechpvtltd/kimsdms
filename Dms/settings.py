@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    'storages',
 ]
 
 
@@ -184,3 +185,91 @@ SWAGGER_SETTINGS = {
 REDOC_SETTINGS = {
     'LAZY_RENDERING': False,
 }
+
+
+
+
+
+# AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', '')
+# AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', '')
+# AWS_S3_REGION_NAME = config('AWS_REGION','ap-south-1')
+# AWS_STORAGE_BUCKET_NAME = config('BUCKET_NAME', '')
+
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+
+
+
+
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', '')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', '')
+AWS_S3_REGION_NAME = config('AWS_REGION', 'ap-south-1')
+AWS_STORAGE_BUCKET_NAME = config('BUCKET_NAME', '')
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+
+# Optional settings for caching
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+# 
+
+
+
+
+import logging
+logging.getLogger('boto3').setLevel(logging.DEBUG)
+logging.getLogger('botocore').setLevel(logging.DEBUG)
+logging.getLogger('django_storages').setLevel(logging.DEBUG)
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Log DEBUG level messages to console
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'boto3': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'botocore': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django_storages': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',  # Change to DEBUG to see Django-related logs
+            'propagate': True,
+        },
+    },
+}
+
+
+
+from django.conf import settings
+print(settings.AWS_ACCESS_KEY_ID)
+print(settings.AWS_SECRET_ACCESS_KEY)
+print(settings.AWS_STORAGE_BUCKET_NAME)

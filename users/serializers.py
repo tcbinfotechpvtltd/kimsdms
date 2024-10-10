@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import RecordLog, User
 from organization.models import Roles, Organization
 
 class RolesDataSerializer(serializers.ModelSerializer):
@@ -70,4 +70,8 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=50)
 
     
-    
+
+class RecordLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecordLog
+        fields = '__all__'
