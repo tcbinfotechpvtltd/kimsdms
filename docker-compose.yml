@@ -1,0 +1,9 @@
+version: '3'
+services:
+  users:
+    build:
+      context: ./dms
+      dockerfile: Dockerfile
+    command: python manage.py runserver
+    ports:
+      - "8000:8000"
