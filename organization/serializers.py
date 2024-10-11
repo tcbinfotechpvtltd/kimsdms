@@ -172,7 +172,11 @@ class SapRecordSerializer(serializers.ModelSerializer):
         if not organization:
             raise ValidationError(message='No organization object found for SAP')
         
+        role = Roles.objects.filter(organization=organization, prev_level__isnull=True).first()
+
         validated_data['organization'] = organization
+        validated_data['role_level'] = role
+
 
         return super().create(validated_data)
 
@@ -185,7 +189,7 @@ class ActionSerializer(serializers.Serializer):
     )
     action = serializers.ChoiceField(choices=ACTIONS)
     record_id = serializers.IntegerField()
-    comment = serializers.CharField(max_length=1000)
+    comment = serializers.CharField(max_length=1000, allow_null=True, allow_blank=True)
 
 
     def validate(self, attrs):

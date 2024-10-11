@@ -85,12 +85,12 @@ class RecordListView(generics.ListAPIView):
                 When(Q(recordrolestatus__role__in=user.roles.all(), recordrolestatus__is_approved=True), then=Value('Approved')),
                 When(Q(recordrolestatus__role__in=user.roles.all(), recordrolestatus__is_approved=False), then=Value('Rejected')),
                 When(Q(recordrolestatus__role__next_level__in=user.roles.all(), recordrolestatus__is_approved=True), then=Value('Pending')),
-                default=Value('No Status')
+                default=Value('Pending')
             )
         )
 
         # Check if user's roles have previous levels
-        if user.roles.filter(previous_levelsgit__isnull=False).exists():
+        if user.roles.filter(prev_level__isnull=False).exists():
             qs = qs.filter(recordrolestatus__isnull=False)
 
         if department_id:
@@ -99,7 +99,7 @@ class RecordListView(generics.ListAPIView):
         if status in ['Approved', 'Rejected', 'Pending']:
             qs = qs.filter(status=status)
 
-        qs = qs.prefetch_related('recordrolestatus', 'recordrolestatus__role', 'recordrolestatus__role__next_level')
+        # qs = qs.prefetch_related('recordrolestatus', 'recordrolestatus__role', 'recordrolestatus__role__prev_level')
 
         return qs
 
@@ -156,6 +156,14 @@ class ActionAPIView(APIView):
         action = data['action']
         record = data['record']
         comment = data['comment']
+
+
+        if action == 'approved':
+            record.role_level = record.role_level.next_level
+            record.save()
+        elif action == 'rejected':
+            record.role_level = record.role_level.prev_level
+            record.save()
 
 
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user)

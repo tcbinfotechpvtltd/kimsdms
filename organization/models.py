@@ -24,7 +24,7 @@ class DepartMent(models.Model):
 class Roles(TimeStamp):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='org_roles')
     role_name = models.CharField(max_length=100)
-    next_level = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_levels')
+    prev_level = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='next_level')
     is_active = models.BooleanField(default=True)
 
 
