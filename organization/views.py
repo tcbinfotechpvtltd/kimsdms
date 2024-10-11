@@ -90,7 +90,7 @@ class RecordListView(generics.ListAPIView):
         )
 
         # Check if user's roles have previous levels
-        if user.roles.filter(previous_levelsgit__isnull=False).exists():
+        if user.roles.filter(previous_levels__isnull=False).exists():
             qs = qs.filter(recordrolestatus__isnull=False)
 
         if department_id:
