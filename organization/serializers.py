@@ -185,7 +185,9 @@ class SapRecordSerializer(serializers.ModelSerializer):
 class ActionSerializer(serializers.Serializer):
     ACTIONS = (
         ('approved', 'approved'),
-        ('rejected', 'rejected')
+        ('rejected', 'rejected'),
+        ('commented', 'commented')
+
     )
     action = serializers.ChoiceField(choices=ACTIONS)
     record_id = serializers.IntegerField()

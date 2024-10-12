@@ -11,6 +11,12 @@ from django_filters import rest_framework as filters
 from django.db.models import Q, Case, When, Value
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import io
+from django.http import HttpResponse
+from jinja2 import Template
+from weasyprint import HTML
+from django.template.loader import render_to_string
+from rest_framework.decorators import api_view
 
 class DepartmentListView(generics.ListAPIView):
     queryset = DepartMent.objects.all()
@@ -168,12 +174,13 @@ class ActionAPIView(APIView):
 
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user)
 
-        RecordRoleStatus.objects.create(
-            log=log_instance,
-            record=record,
-            role=record.role_level,
-            is_approved = True if action == 'approved' else False
-        )
+        if action in ['approved', 'rejected']:
+            RecordRoleStatus.objects.create(
+                log=log_instance,
+                record=record,
+                role=record.role_level,
+                is_approved = True if action == 'approved' else False
+            )
         message = f'You have {action} this document'
         return Response(
             {
@@ -181,4 +188,120 @@ class ActionAPIView(APIView):
                 'message': message
             }
         )
+
+
+
+
+
+# def generate_html_to_pdf(request):
+#     # Sample data to be passed to the HTML template
+#     context = {
+#         'title': 'Invoice',
+#         'items': [
+#             {'name': 'Item 1', 'price': 100},
+#             {'name': 'Item 2', 'price': 200},
+#             {'name': 'Item 3', 'price': 300},
+#         ],
+#         'total': 600,
+#     }
+
+#     # Define your HTML template (this can also be loaded from a file)
+#     html_template = """
+#     <html>
+#     <head>
+#         <style>
+#             body { font-family: Arial, sans-serif; }
+#             table { width: 100%; border-collapse: collapse; }
+#             th, td { padding: 8px 12px; border: 1px solid #ddd; }
+#             th { background-color: #f4f4f4; }
+#         </style>
+#     </head>
+#     <body>
+#         <h1>{{ title }}</h1>
+#         <table>
+#             <thead>
+#                 <tr>
+#                     <th>Item</th>
+#                     <th>Price</th>
+#                 </tr>
+#             </thead>
+#             <tbody>
+#                 {% for item in items %}
+#                 <tr>
+#                     <td>{{ item.name }}</td>
+#                     <td>{{ item.price }}</td>
+#                 </tr>
+#                 {% endfor %}
+#             </tbody>
+#             <tfoot>
+#                 <tr>
+#                     <th>Total</th>
+#                     <th>{{ total }}</th>
+#                 </tr>
+#             </tfoot>
+#         </table>
+#     </body>
+#     </html>
+#     """
+
+#     # Use Jinja2 to render the template with context
+#     template = Template(html_template)
+#     rendered_html = template.render(context)
+
+#     # Convert rendered HTML to PDF
+#     pdf_file = io.BytesIO()  # Use in-memory file
+#     HTML(string=rendered_html).write_pdf(pdf_file)
+
+#     # Move the buffer's position back to the beginning
+#     pdf_file.seek(0)
+
+#     # Create the HTTP response with the PDF content
+#     response = HttpResponse(pdf_file, content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="document.pdf"'
+
+#     return response
+
+
+@api_view(['POST'])
+def generate_report_pdf(request):
+    record_id = request.data.get('record_id')
+
+    try:
+        record = Record.objects.get(id=record_id)
+    except:
+        return Response({'statusCode': 404, 'message': 'Record not found'})
+    
+
+
+    context = {
+    "department": record.department.name if record.department else '',
+    "po_number": record.po_number,
+    "po_date": record.po_date,
+    "vendor_code": record.vendor_code,
+    "supplier_name": record.supplier_name,
+    "invoice_date": record.invoice_date,
+    "invoice_number": record.invoice_number,
+    "invoice_amount": record.invoice_amount,
+    "total_po_amount": record.total_po_amount,
+    "amount_to_be_paid": record.amount_to_be_paid,
+    "advance_amount": record.advance_amount,
+    "tds_amount": record.tds_amount
+    }
+
+    # Load the HTML template from a file using render_to_string
+    rendered_html = render_to_string('report.html', context)
+
+    # Convert rendered HTML to PDF
+    pdf_file = io.BytesIO()  # Use in-memory file
+    HTML(string=rendered_html).write_pdf(pdf_file)
+
+    # Move the buffer's position back to the beginning
+    pdf_file.seek(0)
+
+    # Create the HTTP response with the PDF content
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="document.pdf"'
+
+    return response
+
 

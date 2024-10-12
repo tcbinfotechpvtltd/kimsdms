@@ -4,8 +4,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 from .models import User
 from rest_framework import status
-from .serializers import UserSerializer
+from .serializers import RecordLogSerializer, UserSerializer
 from rest_framework.response import Response
+from rest_framework import generics
 
 # Create your views here.
 class UserCreate(CreateAPIView):
