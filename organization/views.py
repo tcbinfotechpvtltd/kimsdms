@@ -8,7 +8,7 @@ from .serializers import ActionSerializer, DocumentSerializer, RecordListSeriali
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
-from django.db.models import Q, Case, When, Value
+from django.db.models import Q, Case, When, Value, F
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import io
@@ -17,6 +17,7 @@ from jinja2 import Template
 from weasyprint import HTML
 from django.template.loader import render_to_string
 from rest_framework.decorators import api_view
+from datetime import datetime
 
 class DepartmentListView(generics.ListAPIView):
     queryset = DepartMent.objects.all()
@@ -161,26 +162,40 @@ class ActionAPIView(APIView):
 
         action = data['action']
         record = data['record']
-        comment = data['comment']
+        comment = data.get('comment')
 
 
         if action == 'approved':
-            record.role_level = record.role_level.next_level
-            record.save()
+            if hasattr(record.role_level, 'next_level'):
+                record.role_level = record.role_level.next_level
+                record.save()
         elif action == 'rejected':
-            record.role_level = record.role_level.prev_level
-            record.save()
+            if hasattr(record.role_level, 'prev_level'):
+                record.role_level = record.role_level.prev_level
+                record.save()
+        
+        elif action == 'attached':
+            file = data.get('file')
+            if file:
+                RecordDocument.objects.create(record=record, file=file, created_by=user)
 
 
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user)
 
         if action in ['approved', 'rejected']:
-            RecordRoleStatus.objects.create(
-                log=log_instance,
-                record=record,
-                role=record.role_level,
-                is_approved = True if action == 'approved' else False
-            )
+            recordRoleStatusObj = RecordRoleStatus.objects.filter(record=record, role=record.role_level).first()
+            if recordRoleStatusObj:
+                recordRoleStatusObj.is_approved = True if action == 'approved' else False
+                recordRoleStatusObj.save()
+            
+            else:
+                RecordRoleStatus.objects.create(
+                    log=log_instance,
+                    record=record,
+                    role=record.role_level,
+                    is_approved = True if action == 'approved' else False
+                )
+                
         message = f'You have {action} this document'
         return Response(
             {
@@ -274,6 +289,7 @@ def generate_report_pdf(request):
 
 
     context = {
+    'note_sheet_no': record.note_sheet_no,
     "department": record.department.name if record.department else '',
     "po_number": record.po_number,
     "po_date": record.po_date,
@@ -285,8 +301,18 @@ def generate_report_pdf(request):
     "total_po_amount": record.total_po_amount,
     "amount_to_be_paid": record.amount_to_be_paid,
     "advance_amount": record.advance_amount,
-    "tds_amount": record.tds_amount
+    "tds_amount": record.tds_amount,
+    'curr_date': str(datetime.now().date()),
+    'approved_users': RecordRoleStatus.objects.filter(record=record, is_approved=True).annotate(
+        first_name = F('log__created_by__first_name'),
+        last_name = F('log__created_by__last_name'),
+        date = F('log__created_at')
+    ).values(
+        'first_name', 'last_name', 'date'
+    )
     }
+
+    print(context)
 
     # Load the HTML template from a file using render_to_string
     rendered_html = render_to_string('report.html', context)

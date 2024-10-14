@@ -31,13 +31,13 @@
     <table border="1">
         <tr>
             <th class="single-line">1. Note Sheet No</th>
-            <td></td>
+            <td>{{note_sheet_no}}</td>
         </tr>
     </table>
     <table>
     <tr>
     <th class="single-line">2. Date of Note Sheet</th>
-    <td></td>
+    <td>{{curr_date}}</td>
     </tr>
     </table>
     <table>
@@ -80,56 +80,53 @@
             <td>{{invoice_number}}</td>
             <td>{{invoice_date}}</td>
             <td>{{invoice_amount}}</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>{{po_number}}</td>
+            <td>{{po_date}}</td>
+            <td>{{vendor_code}}</td>
             <td></td>
         </tr>
            
     </table>
     <table>
         <th class="middle-line">Total Amount (In Rs.)</th>
-        <td></td>
+        <td>{{total_po_amount}}</td>
     </table>
     <table>
         <tr>
             <th class="single-line">7. TDS Amount To Be Deducted (In Rs.)</th>
-            <td></td>
+            <td>{{tds_amount}}</td>
         </tr>
     </table>
 
 <table border="1">
 <tr>
     <th class="single-line">8. Advance Amount Already Paid (In Rs.)</th>
-    <td></td>
+    <td>{{advance_amount}}</td>
 </tr>
 </table>
 <table>
     <th class="single-line">9. Net Amount To Be Paid (In Rs.)</th>
-    <td></td>
+    <td>{{amount_to_be_paid}}</td>
 </table>
     <table border="1">
         <tr>
             <th></th>
             <th>Finance Officer</th>
             <th></th>
+            <th>Signature</th>
             <th></th>
-            <th>For Use By Planning & Audit Dept.</th>
+            <th>Date</th>
         </tr>
+       {% for user in approved_users %}
         <tr>
             <td></td>
-            <td>Laxmidhar Jena</td>
+            <td>{{user.first_name}} {{user.last_name}}</td>
             <td></td>
-            <td>Braja Kishore Lenka</td>
-            <td>Ashok Dalpat</td>
+            <td>Signed by {{user.first_name}}</td>
+            <th></th>
+            <td>{{user.date}}</td>
         </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>Audit Executive/Audit Officer</td>
-            <td>Chief Audit Officer</td>
-        </tr>
+       {% endfor %}
     </table>
 </body>
 </html>

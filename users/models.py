@@ -16,7 +16,7 @@ class User(AbstractUser):
 
 class RecordLog(CreatorUpdator, TimeStamp):
     ACTIONS = (
-        ('apporved', 'approved'),
+        ('approved', 'approved'),
         ('rejected', 'rejected'),
         ('edited', 'edited'),
         ('commented', 'commented'),
