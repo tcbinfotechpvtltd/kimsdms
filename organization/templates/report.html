@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 7px;
+        }
+
+        th {
+            background-color:   
+ #f2f2f2;
+        }
+        .single-line{
+            width: 500px;
+            text-align: left;
+        }
+        .middle-line{
+            width:825px;
+        }
+    </style>
+
+<body>
+    <h2>NOTE SHEET FOR PAYMENT/ACCOUNTING OF INVOICES</h2>
+    <h3>(KIMS)</h3>
+
+    <table border="1">
+        <tr>
+            <th class="single-line">1. Note Sheet No</th>
+            <td>{{note_sheet_no}}</td>
+        </tr>
+    </table>
+    <table>
+    <tr>
+    <th class="single-line">2. Date of Note Sheet</th>
+    <td>{{curr_date}}</td>
+    </tr>
+    </table>
+    <table>
+    <th class="single-line">3. Name of School</th>
+    <td>KIMS PBMH HOSPITAL</td>
+    </tr>
+    </table>
+<table>
+    <th class="single-line">3. Name of Department</th>
+    <td>{{department}}</td>
+    </tr>
+    </table>
+    <table>
+        <th class="single-line">4. Item of purchase/expense</th>
+        <td></td>
+        </tr>
+    </table>
+    <table>
+            <th class="single-line">5. Name of Supplier</th>
+            <td>{{supplier_name}}</td>
+            </tr>
+    </table>
+    <table>
+    <th class="single-line">6. Details of Invoices & P.O.</th>
+    <td></td>
+</table>
+    <table>
+        <tr>
+            <th>SI. No.</th>
+            <th>Invoices No.</th>
+            <th>Invoice Date</th>
+            <th>Invoice Amount (In Rs.)</th>
+            <th>P.O. No.</th>
+            <th>P.O. Date</th>
+            <th>Vendor Code</th>
+            <th>REMARKS</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>{{invoice_number}}</td>
+            <td>{{invoice_date}}</td>
+            <td>{{invoice_amount}}</td>
+            <td>{{po_number}}</td>
+            <td>{{po_date}}</td>
+            <td>{{vendor_code}}</td>
+            <td></td>
+        </tr>
+           
+    </table>
+    <table>
+        <th class="middle-line">Total Amount (In Rs.)</th>
+        <td>{{total_po_amount}}</td>
+    </table>
+    <table>
+        <tr>
+            <th class="single-line">7. TDS Amount To Be Deducted (In Rs.)</th>
+            <td>{{tds_amount}}</td>
+        </tr>
+    </table>
+
+<table border="1">
+<tr>
+    <th class="single-line">8. Advance Amount Already Paid (In Rs.)</th>
+    <td>{{advance_amount}}</td>
+</tr>
+</table>
+<table>
+    <th class="single-line">9. Net Amount To Be Paid (In Rs.)</th>
+    <td>{{amount_to_be_paid}}</td>
+</table>
+    <table border="1">
+        <tr>
+            <th></th>
+            <th>Finance Officer</th>
+            <th></th>
+            <th>Signature</th>
+            <th></th>
+            <th>Date</th>
+        </tr>
+       {% for user in approved_users %}
+        <tr>
+            <td></td>
+            <td>{{user.first_name}} {{user.last_name}}</td>
+            <td></td>
+            <td>Signed by {{user.first_name}}</td>
+            <th></th>
+            <td>{{user.date}}</td>
+        </tr>
+       {% endfor %}
+    </table>
+</body>
+</html>

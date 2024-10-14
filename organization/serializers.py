@@ -110,6 +110,7 @@ class RecordSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'organization',
+            'note_sheet_no',
             'department',
             'po_number',
             'po_date',
@@ -152,6 +153,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
         model = Record
         fields = [
             'id',
+            'note_sheet_no',
             'department',
             'po_number',
             'po_date',
@@ -185,18 +187,45 @@ class SapRecordSerializer(serializers.ModelSerializer):
 class ActionSerializer(serializers.Serializer):
     ACTIONS = (
         ('approved', 'approved'),
-        ('rejected', 'rejected')
+        ('rejected', 'rejected'),
+        ('commented', 'commented'),
+        ('attached', 'attached')
     )
     action = serializers.ChoiceField(choices=ACTIONS)
     record_id = serializers.IntegerField()
-    comment = serializers.CharField(max_length=1000, allow_null=True, allow_blank=True)
+    
+    # Comment is optional and can be blank or null
+    comment = serializers.CharField(
+        max_length=1000, 
+        required=False, 
+        allow_blank=True,  # Allows an empty string
+        allow_null=True    # Allows null values (None)
+    )
+    
+    # File is optional
+    file = serializers.FileField(required=False, allow_null=True)
 
+    def validate(self, data):
+        """
+        Custom validation if certain actions require comment or file.
+        For example, 'commented' action must have a comment.
+        """
+        action = data.get('action')
 
-    def validate(self, attrs):
-        _id = attrs.get('record_id')
+        if action == 'commented' and not data.get('comment'):
+            raise serializers.ValidationError({"comment": "Comment is required for the 'commented' action."})
+
+        if action == 'attached' and not data.get('file'):
+            raise serializers.ValidationError({"file": "File is required for the 'attached' action."})
+        
+
+        _id = data.get('record_id')
         record =  Record.objects.filter(id=_id).first()
         if not record:
             raise ValidationError(message='Record not found with this id')
-        attrs['record'] = record
-        return attrs
+        data['record'] = record
+
+
+        return data
+       
 
