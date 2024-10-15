@@ -69,9 +69,32 @@ class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=50)
     password = serializers.CharField(max_length=50)
 
-    
+
+
+class UserSlimSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', "first_name","last_name"
+        ]
+
+
+
 
 class RecordLogSerializer(serializers.ModelSerializer):
+
+    created_by = UserSlimSerializer()
+    
     class Meta:
         model = RecordLog
         fields = '__all__'
+
+    def to_representation(self, instance):
+        rp = super().to_representation(instance)
+
+        rp['doc'] = {
+            "file_name": str(instance.doc.file.name).split('/')[-1],
+            "url": instance.doc.file.url
+        } if instance.doc and instance.doc.file else None
+
+        return rp

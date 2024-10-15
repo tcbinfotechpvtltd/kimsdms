@@ -164,6 +164,8 @@ class ActionAPIView(APIView):
         record = data['record']
         comment = data.get('comment')
 
+        doc = None
+
 
         if action == 'approved':
             if hasattr(record.role_level, 'next_level'):
@@ -177,10 +179,10 @@ class ActionAPIView(APIView):
         elif action == 'attached':
             file = data.get('file')
             if file:
-                RecordDocument.objects.create(record=record, file=file, created_by=user)
+                doc = RecordDocument.objects.create(record=record, file=file, created_by=user)
 
 
-        log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user)
+        log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
 
         if action in ['approved', 'rejected']:
             recordRoleStatusObj = RecordRoleStatus.objects.filter(record=record, role=record.role_level).first()
