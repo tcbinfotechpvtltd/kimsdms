@@ -1,3 +1,5 @@
+import os
+import time
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -18,6 +20,11 @@ from weasyprint import HTML
 from django.template.loader import render_to_string
 from rest_framework.decorators import api_view
 from datetime import datetime
+from Dms.common.s3_util import S3Storage
+from django.conf import settings
+
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 class DepartmentListView(generics.ListAPIView):
     queryset = DepartMent.objects.all()
@@ -180,7 +187,15 @@ class ActionAPIView(APIView):
             file = data.get('file')
             if file:
                 doc = RecordDocument.objects.create(record=record, file=file, created_by=user)
-
+                local_path = doc.file.path
+                relative_path = 'media/' + doc.file.url.split('media/')[1]
+                # print(local_path, relative_path)
+                s3 = S3Storage()
+                res = s3.upload_s3_file(local_source_path=local_path, file_relative_path=relative_path)
+                
+                try:
+                    os.unlink(local_path)
+                except: pass
 
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
 
@@ -326,10 +341,48 @@ def generate_report_pdf(request):
     # Move the buffer's position back to the beginning
     pdf_file.seek(0)
 
-    # Create the HTTP response with the PDF content
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="document.pdf"'
 
-    return response
+
+    ##############################################
+    file_name = f'notesheets/{time.time()}.pdf'
+
+    # Save to S3 (default_storage refers to the storage backend, which is S3 in your case)
+    content = ContentFile(pdf_file.read())  # Create a ContentFile from the BytesIO
+    file_url = default_storage.save(file_name, content)
+
+    # You now have the URL for the saved PDF
+    print("File uploaded to S3:", file_url)
+
+   
+        
+    local_path = os.path.join(settings.PROJECT_ROOT, 'media', file_name)
+
+
+    relative_path = f'media/notesheets/{record_id}/notesheet.pdf' 
+
+    s3 = S3Storage()
+    res = s3.upload_s3_file(local_source_path=local_path, file_relative_path=relative_path)
+    
+    try:
+        os.unlink(local_path)
+    except:
+        pass
+
+    absolute_path = os.path.join(settings.MEDIA_URL, str(res).split('media/')[1])
+
+    response = {
+        "url": absolute_path
+    }
+    return Response(response)
+
+    ###############################################
+
+    # # Create the HTTP response with the PDF content
+    # response = HttpResponse(pdf_file, content_type='application/pdf')
+    # response['Content-Disposition'] = 'attachment; filename="document.pdf"'
+
+    # return response
+
+    
 
 
