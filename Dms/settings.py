@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -200,7 +201,9 @@ REDOC_SETTINGS = {
 # MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
 
 
+PROJECT_ROOT = BASE_DIR
 
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', '')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', '')
@@ -209,7 +212,7 @@ AWS_STORAGE_BUCKET_NAME = config('BUCKET_NAME', '')
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
 
 # Optional settings for caching
 AWS_S3_FILE_OVERWRITE = False
