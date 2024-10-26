@@ -45,6 +45,17 @@ class LoginView(APIView):
         user = authenticate(username=data['username'], password=data['password'])
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'user_id': user.id, 'is_admin': user.is_admin, 'username': user.username})
+            user_roles = user.roles.values("id", "organization__id", "organization__name", "role_name")
+
+            roles_data = [
+                {
+                    "id": role["id"],
+                    "organization_id": role["organization__id"],
+                    "organization_name": role["organization__name"],  # Rename here
+                    "role_name": role["role_name"],
+                }
+                for role in user_roles
+            ]
+            return Response({'token': token.key, 'user_id': user.id, 'is_admin': user.is_admin, 'username': user.username,"first_name": user.first_name, "last_name": user.last_name, "email": user.email, "roles": roles_data})
         else:
             return Response({'error': 'Invalid credentials'}, status=401)
