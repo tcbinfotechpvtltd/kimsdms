@@ -34,8 +34,14 @@ class Roles(TimeStamp):
 
 
 class Record(TimeStamp):
+    priority_choices = (
+        ('high', 'high'),
+        ('med', 'med'),
+        ('low', 'low')
+    )
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True)
     note_sheet_no = models.CharField(max_length=200, null=True, blank=True)
+    priority = models.CharField(choices=priority_choices, default='med')
     department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
     po_number = models.CharField(max_length=50, verbose_name="PO Number", null=True, blank=True)
     po_date = models.DateField(verbose_name="PO Date", null=True, blank=True)

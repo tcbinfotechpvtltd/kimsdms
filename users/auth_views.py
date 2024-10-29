@@ -45,7 +45,9 @@ class LoginView(APIView):
         user = authenticate(username=data['username'], password=data['password'])
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            user_roles = user.roles.values("id", "organization__id", "organization__name", "role_name")
+            user_roles = user.roles.values("id", "organization__id", "organization__name", "role_name",
+                                           'prev_level'
+                                           )
 
             roles_data = [
                 {
@@ -53,6 +55,8 @@ class LoginView(APIView):
                     "organization_id": role["organization__id"],
                     "organization_name": role["organization__name"],  # Rename here
                     "role_name": role["role_name"],
+                    'prev_level': role['prev_level'],
+                    'is_initial_role': True if role['prev_level'] is None else False
                 }
                 for role in user_roles
             ]
