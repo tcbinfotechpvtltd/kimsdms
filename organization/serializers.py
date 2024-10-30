@@ -46,10 +46,12 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class RecordListSerializer(serializers.ModelSerializer):
      status = serializers.CharField()
+    #  processed_at = serializers.DateTimeField()
      class Meta:
         model = Record
         fields = [
             'id',
+            'note_sheet_no',
             'organization',
             'department',
             'po_number',
@@ -63,7 +65,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'amount_to_be_paid',
             'advance_amount',
             'tds_amount',
-            'status'
+            'status',
+            'priority'
         ]
 
 class RecordRetrieveSerializer(serializers.ModelSerializer):
@@ -72,6 +75,7 @@ class RecordRetrieveSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'organization',
+            'note_sheet_no',
             'department',
             'po_number',
             'po_date',

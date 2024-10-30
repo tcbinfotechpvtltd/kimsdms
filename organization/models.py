@@ -58,7 +58,9 @@ class Record(TimeStamp):
     tds_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="TDS Amount (auto-fetch from SAP)")
 
 
-    role_level = models.ForeignKey(Roles, on_delete=models.CASCADE, null=True, blank=True)
+    role_level = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='pending_docs')
+    approved_by = models.ManyToManyField(Roles, related_name='approved_docs')
+    rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
 
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name}"
@@ -67,6 +69,12 @@ class Record(TimeStamp):
         verbose_name = "Record"
         verbose_name_plural = "Records"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.id:
+            self.note_sheet_no = f'sap-sheet-{self.id}'
+            super().save(update_fields=['note_sheet_no']) 
 
 
 
