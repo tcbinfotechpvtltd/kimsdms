@@ -83,7 +83,7 @@ class RecordListView(generics.ListAPIView):
         openapi.Parameter(
             'status',
             openapi.IN_QUERY,
-            description="Filter by record status (e.g. Approved, Rejected, Pending)",
+            description="Filter by record status (e.g. Approved, Rejected, Pending, Settled)",
             type=openapi.TYPE_STRING,
             required=False
         ),
