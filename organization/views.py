@@ -63,10 +63,10 @@ class RecordListView(generics.ListAPIView):
 
     @swagger_auto_schema(manual_parameters=[
         openapi.Parameter(
-            'department_id',
+            'department_sloc',
             openapi.IN_QUERY,
-            description="Filter by department ID",
-            type=openapi.TYPE_INTEGER,
+            description="Filter by department Slock",
+            type=openapi.TYPE_STRING,
             required=False
         ),
         openapi.Parameter(
@@ -93,7 +93,7 @@ class RecordListView(generics.ListAPIView):
     ])
 
     def get_queryset(self):
-        department_id = self.request.GET.get('department_id')
+        department_sloc = self.request.GET.get('department_sloc')
         status = self.request.GET.get('status')
         priority = self.request.GET.get('priority')
         search = self.request.GET.get('search')
@@ -110,7 +110,10 @@ class RecordListView(generics.ListAPIView):
                 filter=Q(approved_by__in=all_roles),
                 distinct=True
             ),
-            all_roles_count=Value(len(all_roles), output_field=IntegerField())
+            all_roles_count=Value(len(all_roles), output_field=IntegerField()),
+            department_name=Subquery(
+                DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
+                )
         )
 
         qs = qs.annotate(
@@ -141,8 +144,8 @@ class RecordListView(generics.ListAPIView):
             status__isnull=False
             )
 
-        if department_id:
-            qs = qs.filter(department_id=department_id)
+        if department_sloc:
+            qs = qs.filter(department_sloc=department_sloc)
 
         if status:
             qs = qs.filter(
@@ -205,7 +208,11 @@ class RecordListView(generics.ListAPIView):
 
 
 class RecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Record.objects.all()
+    queryset = Record.objects.all().annotate(
+        department_name=Subquery(
+                DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
+                )
+    )
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -404,11 +411,15 @@ def generate_report_pdf(request):
     except:
         return Response({'statusCode': 404, 'message': 'Record not found'})
     
+    department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
 
+    if department_obj:
+        department = department_obj.name
+    else: department = ''
 
     context = {
     'note_sheet_no': record.note_sheet_no,
-    "department": record.department.name if record.department else '',
+    "department": department,
     "po_number": record.po_number,
     "po_date": record.po_date,
     "vendor_code": record.vendor_code,
