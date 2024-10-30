@@ -17,7 +17,7 @@ class RolesSerializer(serializers.ModelSerializer):
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = DepartMent
-        fields = ['id', 'organization', 'name', 'is_active']
+        fields = ['id', 'organization', 'name', 'sloc', 'plnt', 'is_active']
 
 
 
@@ -46,12 +46,16 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class RecordListSerializer(serializers.ModelSerializer):
      status = serializers.CharField()
+     department_name = serializers.CharField()
+    #  processed_at = serializers.DateTimeField()
      class Meta:
         model = Record
         fields = [
             'id',
+            'note_sheet_no',
             'organization',
-            'department',
+            'department_sloc',
+            'department_name',
             'po_number',
             'po_date',
             'vendor_code',
@@ -63,16 +67,20 @@ class RecordListSerializer(serializers.ModelSerializer):
             'amount_to_be_paid',
             'advance_amount',
             'tds_amount',
-            'status'
+            'status',
+            'priority'
         ]
 
 class RecordRetrieveSerializer(serializers.ModelSerializer):
+    department_name = serializers.CharField()
     class Meta:
         model = Record
         fields = [
             'id',
             'organization',
-            'department',
+            'note_sheet_no',
+            'department_sloc',
+            'department_name',
             'po_number',
             'po_date',
             'vendor_code',
@@ -111,7 +119,7 @@ class RecordSerializer(serializers.ModelSerializer):
             'id',
             'organization',
             'note_sheet_no',
-            'department',
+            'department_sloc',
             'po_number',
             'po_date',
             'vendor_code',
@@ -154,7 +162,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'note_sheet_no',
-            'department',
+            'department_sloc',
             'po_number',
             'po_date',
             'vendor_code',

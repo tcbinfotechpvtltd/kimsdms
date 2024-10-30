@@ -4,13 +4,14 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
+from organization.permissions import authenticate_access_key
 from users.models import RecordLog
 from .models import RecordDocument, RecordRoleStatus, Roles
 from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
-from django.db.models import Q, Case, When, Value, F
+from django.db.models import Q, Case, When, Value, F, Subquery, OuterRef, Count, Exists, IntegerField, CharField, BooleanField
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import io
@@ -25,6 +26,8 @@ from django.conf import settings
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from rest_framework.permissions import AllowAny
+
 
 class DepartmentListView(generics.ListAPIView):
     queryset = DepartMent.objects.all()
@@ -51,8 +54,16 @@ class RecordCreateView(generics.CreateAPIView):
 
 
 class SapRecordCreateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Record.objects.all()
     serializer_class = SapRecordSerializer
+
+    
+    def create(self, request, *args, **kwargs):
+        is_success, resp = authenticate_access_key(request)
+        if is_success:
+            return super().create(request, *args, **kwargs)
+        return resp
 
 
 
@@ -63,10 +74,10 @@ class RecordListView(generics.ListAPIView):
 
     @swagger_auto_schema(manual_parameters=[
         openapi.Parameter(
-            'department_id',
+            'department_sloc',
             openapi.IN_QUERY,
-            description="Filter by department ID",
-            type=openapi.TYPE_INTEGER,
+            description="Filter by department Slock",
+            type=openapi.TYPE_STRING,
             required=False
         ),
         openapi.Parameter(
@@ -75,50 +86,144 @@ class RecordListView(generics.ListAPIView):
             description="Filter by record status (e.g. Approved, Rejected, Pending)",
             type=openapi.TYPE_STRING,
             required=False
+        ),
+        openapi.Parameter(
+            'priority',
+            openapi.IN_QUERY,
+            description="Filter by record priority (e.g. low, mid, high)",
+            type=openapi.TYPE_STRING,
+            required=False
+        ),
+        openapi.Parameter(
+            'search',
+            openapi.IN_QUERY,
+            description="Search by notesheet no",
+            type=openapi.TYPE_STRING,
+            required=False
         )
     ])
 
     def get_queryset(self):
-        department_id = self.request.GET.get('department_id')
+        department_sloc = self.request.GET.get('department_sloc')
         status = self.request.GET.get('status')
+        priority = self.request.GET.get('priority')
+        search = self.request.GET.get('search')
+
         user = self.request.user
 
-        # Start with records belonging to the user's organization
-        qs = self.queryset.filter(organization=user.organization)
+        assigned_roles = user.roles.all()
 
-        # Filter records based on approval status or role hierarchy
-        qs = qs.filter(
-            Q(recordrolestatus__isnull=True) |  # No status yet
-            Q(recordrolestatus__role__in=user.roles.all(), recordrolestatus__is_approved__in=[True, False]) |  # Approved or Rejected by the user's role
-            Q(recordrolestatus__role__next_level__in=user.roles.all(), recordrolestatus__is_approved=True)  # Approved by previous role, pending on the current user's role
-        ).distinct()
+        all_roles = Roles.objects.filter(organization=user.organization)
 
-        # Annotate the status field for easier filtering
-        qs = qs.annotate(
-            status=Case(
-                When(Q(recordrolestatus__role__in=user.roles.all(), recordrolestatus__is_approved=True), then=Value('Approved')),
-                When(Q(recordrolestatus__role__in=user.roles.all(), recordrolestatus__is_approved=False), then=Value('Rejected')),
-                When(Q(recordrolestatus__role__next_level__in=user.roles.all(), recordrolestatus__is_approved=True), then=Value('Pending')),
-                default=Value('Pending')
-            )
+        qs = self.queryset.annotate(
+            approved_roles_count=Count(
+                'approved_by',
+                filter=Q(approved_by__in=all_roles),
+                distinct=True
+            ),
+            all_roles_count=Value(len(all_roles), output_field=IntegerField()),
+            department_name=Subquery(
+                DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
+                )
         )
 
-        # Check if user's roles have previous levels
-        if user.roles.filter(prev_level__isnull=False).exists():
-            qs = qs.filter(recordrolestatus__isnull=False)
+        qs = qs.annotate(
+            is_pending=Exists(
+                qs.filter(role_level__in=assigned_roles)
+                    .exclude(approved_by__in=assigned_roles)
+                    .exclude(rejected_by__in=assigned_roles)
+            ),
+            is_approved=Exists(
+                qs.filter(approved_by__in=assigned_roles).
+                    exclude(
+                    Q(approved_roles_count=F('all_roles_count'))
+                )
+            ),
+            is_rejected=Exists(
+                qs.filter(rejected_by__isnull=False)
+            ),
+            )
+        
+        qs = qs.annotate(
+            status = Case(
+                When(approved_roles_count=F('all_roles_count'), then=Value("Settled")),
+                When(is_pending=True, then=Value('Pending')),
+                When(is_approved=True, then=Value('Approved')),
+                When(is_rejected=True, then=Value('Rejected')),
+            )
+        ).filter(
+            status__isnull=False
+            )
 
-        if department_id:
-            qs = qs.filter(department_id=department_id)
+        if department_sloc:
+            qs = qs.filter(department_sloc=department_sloc)
 
-        if status in ['Approved', 'Rejected', 'Pending']:
-            qs = qs.filter(status=status)
+        if status:
+            qs = qs.filter(
+                status=status
+            )
 
-        # qs = qs.prefetch_related('recordrolestatus', 'recordrolestatus__role', 'recordrolestatus__role__prev_level')
+        if priority:
+            qs = qs.filter(priority=priority, status='Pending')
+
+        if search:
+            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search, note_sheet_no__icontains=search))
 
         return qs
+        
+   
+
+
+    def list(self, request, *args, **kwargs):
+        serialized_data = RecordListSerializer(self.get_queryset(), many=True).data
+        
+        is_statistics = request.GET.get('is_statistics')
+        status = self.request.GET.get('status')
+        # priority = self.request.GET.get('priority')
+        # search = self.request.GET.get('search')
+
+
+        # if status in ['Approved', 'Rejected', 'Pending', 'Settled']:
+        #     serialized_data = [data for data in serialized_data if data['status'] == status]
+
+        # if priority:
+        #     serialized_data = [data for data in serialized_data if data['status'] == "Pending" and data['priority'] == 'high']
+
+        # if search:
+        #    serialized_data = [data for data in serialized_data if search in data['note_sheet_no']]
+
+        if is_statistics:
+            status_options = ['Approved', 'Rejected', 'Pending', 'Settled']
+            priority_counts = {'High-Priority': 0}
+
+            status_count_dict = {status: 0 for status in status_options}
+
+            for item in serialized_data:
+                status = item.get('status') 
+                if status in status_count_dict:
+                    status_count_dict[status] += 1
+
+                if item.get('priority') == 'high' and item.get('status') =="Pending":
+                    priority_counts['High-Priority'] += 1
+
+            response_data = {
+                'status_counts': status_count_dict,
+                'high_priority_count': priority_counts['High-Priority'],
+            }
+        else:
+            response_data = serialized_data
+
+        return Response(response_data)
+        
+
+
 
 class RecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Record.objects.all()
+    queryset = Record.objects.all().annotate(
+        department_name=Subquery(
+                DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
+                )
+    )
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -173,15 +278,27 @@ class ActionAPIView(APIView):
 
         doc = None
 
+        approve_reject_by = None
 
         if action == 'approved':
-            if hasattr(record.role_level, 'next_level'):
-                record.role_level = record.role_level.next_level
+            if record.role_level:
+                approve_reject_by = record.role_level
+                if hasattr(record.role_level, 'next_level'):
+                    record.role_level = record.role_level.next_level
+                record.approved_by.add(approve_reject_by)
+                record.rejected_by = None
                 record.save()
+
         elif action == 'rejected':
-            if hasattr(record.role_level, 'prev_level'):
-                record.role_level = record.role_level.prev_level
+            if record.role_level:
+                record.approved_by.clear() # clearing all approves
+                approve_reject_by = record.role_level
+                if hasattr(record.role_level, 'prev_level'):
+                    record.role_level = Roles.objects.filter(organization=user.organization, prev_level__isnull=True).first()  # shifting it to initial role
+                record.rejected_by = approve_reject_by
                 record.save()
+
+            
         
         elif action == 'attached':
             file = data.get('file')
@@ -197,10 +314,12 @@ class ActionAPIView(APIView):
                     os.unlink(local_path)
                 except: pass
 
+            
+
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
 
         if action in ['approved', 'rejected']:
-            recordRoleStatusObj = RecordRoleStatus.objects.filter(record=record, role=record.role_level).first()
+            recordRoleStatusObj = RecordRoleStatus.objects.filter(record=record, role=approve_reject_by).first()
             if recordRoleStatusObj:
                 recordRoleStatusObj.is_approved = True if action == 'approved' else False
                 recordRoleStatusObj.save()
@@ -303,11 +422,15 @@ def generate_report_pdf(request):
     except:
         return Response({'statusCode': 404, 'message': 'Record not found'})
     
+    department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
 
+    if department_obj:
+        department = department_obj.name
+    else: department = ''
 
     context = {
     'note_sheet_no': record.note_sheet_no,
-    "department": record.department.name if record.department else '',
+    "department": department,
     "po_number": record.po_number,
     "po_date": record.po_date,
     "vendor_code": record.vendor_code,

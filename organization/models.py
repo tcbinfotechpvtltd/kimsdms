@@ -5,6 +5,8 @@ from Dms.common.models import CreatorUpdator, TimeStamp
 class Organization(models.Model):
     name = models.CharField(max_length=500)
     short_uniq_name = models.CharField(max_length=500, null=True, blank=True)
+    access_key = models.CharField(max_length=500, null=True, blank=True)
+    access_id = models.CharField(max_length=300, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
@@ -14,10 +16,15 @@ class Organization(models.Model):
 class DepartMent(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='org_depts')
     name = models.CharField(max_length=500)
+    sloc = models.CharField(max_length=50, null=True, blank=True)
+    plnt = models.CharField(max_length=50, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return self.name
+    
+
+
     
 
 
@@ -34,9 +41,16 @@ class Roles(TimeStamp):
 
 
 class Record(TimeStamp):
+    priority_choices = (
+        ('high', 'high'),
+        ('med', 'med'),
+        ('low', 'low')
+    )
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True)
     note_sheet_no = models.CharField(max_length=200, null=True, blank=True)
-    department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
+    priority = models.CharField(choices=priority_choices, default='med')
+    # department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
+    department_sloc = models.CharField(max_length=50, null=True, blank=True)
     po_number = models.CharField(max_length=50, verbose_name="PO Number", null=True, blank=True)
     po_date = models.DateField(verbose_name="PO Date", null=True, blank=True)
     vendor_code = models.CharField(max_length=50, verbose_name="Vendor Code", null=True, blank=True)
@@ -52,7 +66,9 @@ class Record(TimeStamp):
     tds_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="TDS Amount (auto-fetch from SAP)")
 
 
-    role_level = models.ForeignKey(Roles, on_delete=models.CASCADE, null=True, blank=True)
+    role_level = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='pending_docs')
+    approved_by = models.ManyToManyField(Roles, related_name='approved_docs')
+    rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
 
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name}"
@@ -61,6 +77,12 @@ class Record(TimeStamp):
         verbose_name = "Record"
         verbose_name_plural = "Records"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.id:
+            self.note_sheet_no = f'sap-sheet-{self.id}'
+            super().save(update_fields=['note_sheet_no']) 
 
 
 
