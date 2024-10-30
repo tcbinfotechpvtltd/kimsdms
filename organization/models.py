@@ -5,6 +5,8 @@ from Dms.common.models import CreatorUpdator, TimeStamp
 class Organization(models.Model):
     name = models.CharField(max_length=500)
     short_uniq_name = models.CharField(max_length=500, null=True, blank=True)
+    access_key = models.CharField(max_length=500, null=True, blank=True)
+    access_id = models.CharField(max_length=300, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
@@ -22,93 +24,7 @@ class DepartMent(models.Model):
         return self.name
     
 
-[
-  {
-    "Plnt": "2300",
-    "SLoc": "A231",
-    "DEPT_NAME": "KIMS CENTRAL STORE"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "C230",
-    "DEPT_NAME": "KIMS CENTRAL STORE"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "C235",
-    "DEPT_NAME": "KIMS ICT"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "C237",
-    "DEPT_NAME": "KIMS ELECTRICAL"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "C238",
-    "DEPT_NAME": "KIMS ICT"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "D231",
-    "DEPT_NAME": "KIMS BIO MEDICAL"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "D232",
-    "DEPT_NAME": "KIMS CENTRAL LAB"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "D233",
-    "DEPT_NAME": "KIMS FOOD & HOSPITALITY"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "D234",
-    "DEPT_NAME": "KIMS MAINTENANCE"
-  },
-  {
-    "Plnt": "2300",
-    "SLoc": "D235",
-    "DEPT_NAME": "KIMS FIRE & SAFETY"
-  },
-  {
-    "Plnt": "2400",
-    "SLoc": "D240",
-    "DEPT_NAME": "KIMS NURSING"
-  },
-  {
-    "Plnt": "2500",
-    "SLoc": "D250",
-    "DEPT_NAME": "KIMS DENTAL"
-  },
-  {
-    "Plnt": "3400",
-    "SLoc": "S230",
-    "DEPT_NAME": "SS & CC CENTRAL STORE"
-  },
-  {
-    "Plnt": "3400",
-    "SLoc": "S231",
-    "DEPT_NAME": "SS & CC BIOMEDICAL"
-  },
-  {
-    "Plnt": "3400",
-    "SLoc": "S234",
-    "DEPT_NAME": "SS & CC MAINTENANCE"
-  },
-  {
-    "Plnt": "3400",
-    "SLoc": "S235",
-    "DEPT_NAME": "SS & CC ICT"
-  },
-  {
-    "Plnt": "3400",
-    "SLoc": "S236",
-    "DEPT_NAME": "SS & CC LINEN STORE"
-  }
-]
+
     
 
 

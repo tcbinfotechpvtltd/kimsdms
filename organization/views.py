@@ -4,6 +4,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
+from organization.permissions import authenticate_access_key
 from users.models import RecordLog
 from .models import RecordDocument, RecordRoleStatus, Roles
 from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer
@@ -25,6 +26,8 @@ from django.conf import settings
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from rest_framework.permissions import AllowAny
+
 
 class DepartmentListView(generics.ListAPIView):
     queryset = DepartMent.objects.all()
@@ -51,8 +54,16 @@ class RecordCreateView(generics.CreateAPIView):
 
 
 class SapRecordCreateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Record.objects.all()
     serializer_class = SapRecordSerializer
+
+    
+    def create(self, request, *args, **kwargs):
+        is_success, resp = authenticate_access_key(request)
+        if is_success:
+            return super().create(request, *args, **kwargs)
+        return resp
 
 
 
