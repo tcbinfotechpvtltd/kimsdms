@@ -167,7 +167,7 @@ class RecordListView(generics.ListAPIView):
             qs = qs.filter(priority=priority, status='Pending')
 
         if search:
-            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search, note_sheet_no__icontains=search))
+            qs = qs.filter(Q(note_sheet_no__icontains=search))
 
         return qs
         
