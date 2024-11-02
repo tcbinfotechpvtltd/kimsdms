@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 from .models import User
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from .serializers import RecordLogSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import generics
@@ -22,8 +23,19 @@ class UserDetail(RetrieveAPIView):
     queryset = User.objects.all() 
 
     def get_object(self):
+        pk = self.kwargs.get('pk')
+        token = self.request.headers.get('Authorization').split()[1]
         try:
-            return get_object_or_404(User, pk=self.kwargs['pk'], is_delete=False)
+            if pk:
+                return get_object_or_404(User, pk=pk, is_delete=False)
+            elif token:
+                token = get_object_or_404(Token, key=token)
+                if not token.user.is_delete:
+                    return token.user
+                else:
+                    raise NotFound("User does not exist.")
+            else:
+                raise NotFound("User identifier not provided.")
         except Http404:
             raise NotFound("User does not exist.")
         
