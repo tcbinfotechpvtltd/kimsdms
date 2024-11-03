@@ -68,7 +68,7 @@ class SapRecordCreateView(generics.CreateAPIView):
 
 
 class RecordListView(generics.ListAPIView):
-    queryset = Record.objects.all()
+    queryset = Record.objects.all().prefetch_related('logs', 'documents')
     serializer_class = RecordListSerializer
 
 
@@ -100,6 +100,13 @@ class RecordListView(generics.ListAPIView):
             description="Search by notesheet no",
             type=openapi.TYPE_STRING,
             required=False
+        ),
+        openapi.Parameter(
+            'id',
+            openapi.IN_QUERY,
+            description="filter by id",
+            type=openapi.TYPE_INTEGER,
+            required=False
         )
     ])
 
@@ -108,6 +115,8 @@ class RecordListView(generics.ListAPIView):
         status = self.request.GET.get('status')
         priority = self.request.GET.get('priority')
         search = self.request.GET.get('search')
+        _id = self.request.GET.get('id')
+
 
         user = self.request.user
 
@@ -154,6 +163,17 @@ class RecordListView(generics.ListAPIView):
         ).filter(
             status__isnull=False
             )
+        
+        qs = qs.annotate(
+            at_initial_role=Case(
+                When(role_level__prev_level__isnull=True, then=Value(True, BooleanField())),
+                default=Value(False, BooleanField())
+            )
+        )
+        
+        if _id:
+            qs = qs.filter(id=_id)
+            return qs
 
         if department_sloc:
             qs = qs.filter(department_sloc=department_sloc)
@@ -164,6 +184,8 @@ class RecordListView(generics.ListAPIView):
             )
 
         if priority:
+            if priority == 'medium':
+                priority = 'med'
             qs = qs.filter(priority=priority, status='Pending')
 
         if search:
@@ -179,6 +201,7 @@ class RecordListView(generics.ListAPIView):
         
         is_statistics = request.GET.get('is_statistics')
         status = self.request.GET.get('status')
+        _id = self.request.GET.get('id')
         # priority = self.request.GET.get('priority')
         # search = self.request.GET.get('search')
 
@@ -191,6 +214,11 @@ class RecordListView(generics.ListAPIView):
 
         # if search:
         #    serialized_data = [data for data in serialized_data if search in data['note_sheet_no']]
+
+        if _id:
+            if len(serialized_data) > 0:
+                return Response(serialized_data[0])
+            return Response({}) 
 
         if is_statistics:
             status_options = ['Approved', 'Rejected', 'Pending', 'Settled']
@@ -492,6 +520,9 @@ def generate_report_pdf(request):
         pass
 
     absolute_path = os.path.join(settings.MEDIA_URL, str(res).split('media/')[1])
+
+    record.note_sheet_url = absolute_path
+    record.save()
 
     response = {
         "url": absolute_path

@@ -70,6 +70,8 @@ class Record(TimeStamp):
     approved_by = models.ManyToManyField(Roles, related_name='approved_docs')
     rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
 
+    note_sheet_url = models.URLField(null=True, blank=True)
+
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name}"
 
