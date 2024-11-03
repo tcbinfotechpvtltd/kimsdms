@@ -31,7 +31,8 @@ class UserDetail(RetrieveAPIView):
             elif token:
                 token = get_object_or_404(Token, key=token)
                 if not token.user.is_delete:
-                    return token.user
+                    user = token.user
+                    return user
                 else:
                     raise NotFound("User does not exist.")
             else:
@@ -39,6 +40,27 @@ class UserDetail(RetrieveAPIView):
         except Http404:
             raise NotFound("User does not exist.")
         
+    def retrieve(self, request, *args, **kwargs):
+        # Retrieve the user instance using the get_object method
+        user = self.get_object()
+        
+        # Get user roles and construct roles data
+        user_roles = user.roles.values('id', 'role_name', 'prev_level')
+        roles_data = [
+            {
+                "id": role["id"],
+                "role_name": role["role_name"],
+                'is_initial_role': True if role['prev_level'] is None else False
+            }
+            for role in user_roles
+        ]
+        
+        # Serialize the user data once
+        user_data = self.get_serializer(user).data
+        user_data['roles'] = roles_data
+        
+        # Return the final data in the response
+        return Response(user_data)
 class UserUpdate(UpdateAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
