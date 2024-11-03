@@ -5,7 +5,7 @@ from users.serializers import RecordLogSerializer
 from .models import Organization, RecordDocument, Roles
 from .models import Record, DepartMent
 from django.utils import timezone
-from users.models import RecordLog
+from users.models import RecordLog, User
 
 class RolesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,12 +43,22 @@ class DocumentSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name']
+
+
+class DocBasicSerializer(serializers.ModelSerializer):
+     class Meta:
+        model = RecordDocument
+        fields = ['id', 'file']
 
 class RecordListSerializer(serializers.ModelSerializer):
-     status = serializers.CharField()
-     department_name = serializers.CharField()
-    #  processed_at = serializers.DateTimeField()
-     class Meta:
+    status = serializers.CharField()
+    department_name = serializers.CharField()
+    at_initial_role = serializers.BooleanField()
+    class Meta:
         model = Record
         fields = [
             'id',
@@ -68,11 +78,35 @@ class RecordListSerializer(serializers.ModelSerializer):
             'advance_amount',
             'tds_amount',
             'status',
-            'priority'
+            'priority',
+            'at_initial_role',
+            'note_sheet_url',
         ]
+
+
+    def to_representation(self, instance):
+        rp =  super().to_representation(instance)
+        rp['priority'] = 'medium' if instance.priority == 'med' else instance.priority
+
+        last_log = instance.logs.filter(action__in=['approved', 'rejected']).last()
+
+        last_action = last_log.action if last_log else ''
+        user_info = UserBasicSerializer(last_log.created_by).data if last_log and last_log.created_by else {}
+
+        docs = DocBasicSerializer(instance.documents.all(), many=True).data
+
+        rp['last_action'] = last_action
+        rp['last_action_done_by'] = user_info
+        rp['docs'] = docs
+
+        return rp
+    
+
 
 class RecordRetrieveSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField()
+    status = serializers.CharField()
+
     class Meta:
         model = Record
         fields = [
@@ -92,7 +126,8 @@ class RecordRetrieveSerializer(serializers.ModelSerializer):
             'amount_to_be_paid',
             'advance_amount',
             'tds_amount',
-            'updated_at'
+            'updated_at',
+            'status'
         ]
 
     def to_representation(self, instance):
