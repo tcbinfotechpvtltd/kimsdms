@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
 from organization.permissions import authenticate_access_key
 from users.models import RecordLog
+from users.serializers import RecordLogSerializer
 from .models import RecordDocument, RecordRoleStatus, Roles
 from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer
 from .models import Record, DepartMent
@@ -217,7 +218,12 @@ class RecordListView(generics.ListAPIView):
 
         if _id:
             if len(serialized_data) > 0:
-                return Response(serialized_data[0])
+                _data = serialized_data[0]
+                logs_qs = RecordLog.objects.filter(record_id=_id)
+                logs_data = RecordLogSerializer(logs_qs, many=True).data
+                _data['activity_logs'] = logs_data
+                return Response(_data)
+            
             return Response({}) 
 
         if is_statistics:
