@@ -62,6 +62,7 @@ class RecordListSerializer(serializers.ModelSerializer):
         model = Record
         fields = [
             'id',
+            'record_name',
             'note_sheet_no',
             'organization',
             'department_sloc',
@@ -198,6 +199,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
             'id',
             'note_sheet_no',
             'department_sloc',
+            'record_name',
             'po_number',
             'po_date',
             'vendor_code',

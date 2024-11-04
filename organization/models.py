@@ -71,6 +71,7 @@ class Record(TimeStamp):
     rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
 
     note_sheet_url = models.URLField(null=True, blank=True)
+    record_name = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name}"
