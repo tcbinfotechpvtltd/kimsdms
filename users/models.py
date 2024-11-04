@@ -5,12 +5,21 @@ from Dms.common.models import CreatorUpdator, TimeStamp
 from organization.models import Record, RecordDocument, Roles
 
 
+def get_photo_upload_path(instance, file_name):
+    return f'user_profile_pics/{instance.id}/{file_name}'
+
+def get_signature_upload_path(instance, file_name):
+    return f'user_signatures/{instance.id}/{file_name}'
+
+
 class User(AbstractUser):
     organization = models.ForeignKey('organization.Organization', on_delete=models.CASCADE, related_name='org_users', null=True, blank=True)
     roles = models.ManyToManyField('organization.Roles', related_name='role_users')
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_delete = models.BooleanField(default=False)
+    photo = models.ImageField(upload_to=get_photo_upload_path, null=True, blank=True)
+    signature = models.ImageField(upload_to=get_signature_upload_path, null=True, blank=True)
 
 
 
