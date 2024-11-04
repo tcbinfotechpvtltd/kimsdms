@@ -102,8 +102,9 @@ class UserUpdate(UpdateAPIView):
             print("rohit==>",user)
 
         if signature:
-            signature_path = f"user_signatures/{user.id}/signature"
-            user.signature_url = self.upload_to_s3(signature, signature_path)
+            signature_extension = os.path.splitext(signature.name)[1]
+            signature_path = f"user/{user.id}/signature{signature_extension}"
+            user.signature = self.upload_to_s3(signature, signature_path)
         
         user.save()
 
