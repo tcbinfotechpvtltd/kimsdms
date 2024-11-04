@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import RecordLog, User
+from rest_framework.exceptions import ValidationError
 from organization.models import Roles, Organization
 
 class RolesDataSerializer(serializers.ModelSerializer):
@@ -30,19 +31,40 @@ class UserSerializer(serializers.ModelSerializer):
         allow_null=True,  # Allow null values
         source='roles'
     )
+    photo = serializers.SerializerMethodField()
+    signature = serializers.SerializerMethodField()
 
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'password', 'is_admin', 'is_active',
-            'organization', 'organization_id', 'roles', 'role_ids',"first_name","last_name"
+            'organization', 'organization_id', 'roles', 'role_ids',"first_name","last_name","photo","signature"
         ]
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True, 'allow_blank': False},
             'username': {'required': True, 'allow_blank': False},
         }
+
+    def get_photo(self, obj):
+        # Return the relative path without MEDIA_URL
+        return obj.photo.name if obj.photo else None
+    
+    def get_signature(self, obj):
+        # Return the relative path without MEDIA_URL
+        return obj.signature.name if obj.signature else None
+
+
+    def validate_photo(self, value):
+        if not value.name.endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            raise serializers.ValidationError("Only image files are allowed for photo.")
+        return value
+
+    def validate_signature(self, value):
+        if not value.name.endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            raise serializers.ValidationError("Only image files are allowed for signature.")
+        return value
 
     def validate(self, data):
         # Check if email is unique

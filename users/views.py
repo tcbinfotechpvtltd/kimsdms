@@ -8,6 +8,9 @@ from rest_framework.authtoken.models import Token
 from .serializers import RecordLogSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import generics
+from django.conf import settings
+from botocore.exceptions import NoCredentialsError, ClientError
+import boto3,os
 
 # Create your views here.
 class UserCreate(CreateAPIView):
@@ -70,6 +73,43 @@ class UserUpdate(UpdateAPIView):
             return get_object_or_404(User, pk=self.kwargs['pk'])
         except Http404:
             raise NotFound("User does not exist.")
+
+    def upload_to_s3(self, file, path):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
+        try:
+            s3_client.upload_fileobj(file, settings.AWS_STORAGE_BUCKET_NAME, path)
+            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{path}"
+            return file_url
+        except (NoCredentialsError, ClientError) as e:
+            raise NotFound(f"Failed to upload file to S3: {str(e)}")
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        print("rohit==>",request.FILES)
+        photo = request.FILES.get('photo')
+        signature = request.FILES.get('signature')
+
+        # Upload files to S3 and update URLs in user instance
+        if photo:
+            photo_extension = os.path.splitext(photo.name)[1]
+            photo_path = f"user/{user.id}/profile_pic{photo_extension}"
+            user.photo = self.upload_to_s3(photo, photo_path)
+            print("rohit==>",user)
+
+        if signature:
+            signature_path = f"user_signatures/{user.id}/signature"
+            user.signature_url = self.upload_to_s3(signature, signature_path)
+        
+        user.save()
+
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class UserSoftDelete(DestroyAPIView):
     queryset = User.objects.all()
