@@ -97,6 +97,7 @@ class RecordDocument(CreatorUpdator):
     record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='documents')
     file = models.FileField(upload_to=get_upload_path)
     file_size = models.FloatField(null=True, blank=True)
+    file_name = models.CharField(max_length=200, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     
 
