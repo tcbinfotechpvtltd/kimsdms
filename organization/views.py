@@ -139,18 +139,18 @@ class RecordListView(generics.ListAPIView):
 
         qs = qs.annotate(
             is_pending=Exists(
-                qs.filter(role_level__in=assigned_roles)
-                    .exclude(approved_by__in=assigned_roles)
-                    .exclude(rejected_by__in=assigned_roles)
+                qs.filter(role_level__in=assigned_roles, id=(OuterRef('id')))
+                    .exclude(approved_by__in=assigned_roles, id=(OuterRef('id')))
+                    .exclude(rejected_by__in=assigned_roles, id=(OuterRef('id')))
             ),
             is_approved=Exists(
-                qs.filter(approved_by__in=assigned_roles).
+                qs.filter(approved_by__in=assigned_roles, id=(OuterRef('id'))).
                     exclude(
-                    Q(approved_roles_count=F('all_roles_count'))
+                    Q(approved_roles_count=F('all_roles_count'), id=(OuterRef('id')))
                 )
             ),
             is_rejected=Exists(
-                qs.filter(rejected_by__isnull=False)
+                qs.filter(rejected_by__isnull=False, id=(OuterRef('id')))
             ),
             )
         
