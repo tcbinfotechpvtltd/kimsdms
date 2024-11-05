@@ -44,11 +44,14 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
+    photo = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name']
+        fields = ['id', 'first_name', 'last_name','photo']
 
-
+    def get_photo(self, obj):
+            # This will return the URL without any additional prefix if set up correctly
+            return obj.photo.name if obj.photo else None
 class DocBasicSerializer(serializers.ModelSerializer):
      class Meta:
         model = RecordDocument

@@ -90,20 +90,18 @@ class UserUpdate(UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        print("rohit==>",request.FILES)
         photo = request.FILES.get('photo')
         signature = request.FILES.get('signature')
 
         # Upload files to S3 and update URLs in user instance
         if photo:
             photo_extension = os.path.splitext(photo.name)[1]
-            photo_path = f"user/{user.id}/profile_pic{photo_extension}"
+            photo_path = f"media/users/{user.id}/profile_pic{photo_extension}"
             user.photo = self.upload_to_s3(photo, photo_path)
-            print("rohit==>",user)
 
         if signature:
             signature_extension = os.path.splitext(signature.name)[1]
-            signature_path = f"user/{user.id}/signature{signature_extension}"
+            signature_path = f"media/users/{user.id}/signature{signature_extension}"
             user.signature = self.upload_to_s3(signature, signature_path)
         
         user.save()
