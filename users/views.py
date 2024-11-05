@@ -92,6 +92,7 @@ class UserUpdate(UpdateAPIView):
         user = self.get_object()
         photo = request.FILES.get('photo')
         signature = request.FILES.get('signature')
+        contact = request.data.get('contact')
 
         # Upload files to S3 and update URLs in user instance
         if photo:
@@ -103,6 +104,8 @@ class UserUpdate(UpdateAPIView):
             signature_extension = os.path.splitext(signature.name)[1]
             signature_path = f"media/users/{user.id}/signature{signature_extension}"
             user.signature = self.upload_to_s3(signature, signature_path)
+        if contact:
+            user.contact = contact
         
         user.save()
 

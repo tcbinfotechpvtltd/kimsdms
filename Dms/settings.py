@@ -273,6 +273,4 @@ LOGGING = {
 
 
 from django.conf import settings
-print(settings.AWS_ACCESS_KEY_ID)
-print(settings.AWS_SECRET_ACCESS_KEY)
 print(settings.AWS_STORAGE_BUCKET_NAME)

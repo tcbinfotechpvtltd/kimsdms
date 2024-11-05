@@ -20,7 +20,7 @@ class User(AbstractUser):
     is_delete = models.BooleanField(default=False)
     photo = models.ImageField(upload_to=get_photo_upload_path, null=True, blank=True)
     signature = models.ImageField(upload_to=get_signature_upload_path, null=True, blank=True)
-
+    contact = models.CharField(max_length=15, null=True, blank=True)  # New field for contact number
 
 
 class RecordLog(CreatorUpdator, TimeStamp):

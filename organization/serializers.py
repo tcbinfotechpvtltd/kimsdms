@@ -47,7 +47,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
     photo = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name','photo']
+        fields = ['id', 'first_name', 'last_name','photo',"contact"]
 
     def get_photo(self, obj):
             # This will return the URL without any additional prefix if set up correctly
