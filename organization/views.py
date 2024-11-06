@@ -1,5 +1,6 @@
 import os
 import time
+from django.forms import ValidationError
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -422,7 +423,8 @@ class ActionAPIView(APIView):
         elif action == 'attached':
             file = data.get('file')
             if file:
-                doc = RecordDocument.objects.create(record=record, file=file, created_by=user)
+                file_name = file.name
+                doc = RecordDocument.objects.create(record=record, file=file, created_by=user, file_name=file_name)
                 local_path = doc.file.path
                 relative_path = 'media/' + doc.file.url.split('media/')[1]
                 # print(local_path, relative_path)

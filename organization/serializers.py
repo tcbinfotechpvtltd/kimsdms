@@ -52,7 +52,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
 class DocBasicSerializer(serializers.ModelSerializer):
      class Meta:
         model = RecordDocument
-        fields = ['id', 'file']
+        fields = ['id', 'file_name', 'file']
 
 class RecordListSerializer(serializers.ModelSerializer):
     status = serializers.CharField()
