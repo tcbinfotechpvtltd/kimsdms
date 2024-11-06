@@ -74,7 +74,7 @@ class Record(TimeStamp):
     record_name = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
-        return f"PO {self.po_number} - {self.supplier_name}"
+        return f"PO {self.po_number} - {self.supplier_name} ({self.id})"
 
     class Meta:
         verbose_name = "Record"
@@ -97,6 +97,7 @@ class RecordDocument(CreatorUpdator):
     record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='documents')
     file = models.FileField(upload_to=get_upload_path)
     file_size = models.FloatField(null=True, blank=True)
+    file_name = models.CharField(max_length=200, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     
 

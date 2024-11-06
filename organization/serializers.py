@@ -55,12 +55,13 @@ class UserBasicSerializer(serializers.ModelSerializer):
 class DocBasicSerializer(serializers.ModelSerializer):
      class Meta:
         model = RecordDocument
-        fields = ['id', 'file']
+        fields = ['id', 'file_name', 'file']
 
 class RecordListSerializer(serializers.ModelSerializer):
     status = serializers.CharField()
     department_name = serializers.CharField()
     at_initial_role = serializers.BooleanField()
+    duration = serializers.DurationField()
     class Meta:
         model = Record
         fields = [
@@ -85,6 +86,7 @@ class RecordListSerializer(serializers.ModelSerializer):
             'priority',
             'at_initial_role',
             'note_sheet_url',
+            'duration'
         ]
 
 

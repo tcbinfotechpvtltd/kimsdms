@@ -3,4 +3,7 @@ from .models import User, RecordLog
 
 # Register your models here.
 admin.site.register(User)
-admin.site.register(RecordLog)
+
+@admin.register(RecordLog)
+class RecordLogAdmin(admin.ModelAdmin):
+    list_display = ['id', 'record', 'action', 'created_by', 'created_at']
