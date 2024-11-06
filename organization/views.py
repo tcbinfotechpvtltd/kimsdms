@@ -12,7 +12,7 @@ from .serializers import ActionSerializer, DocumentSerializer, RecordListSeriali
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
-from django.db.models import Q, Case, When, Value, F, Subquery, OuterRef, Count, Exists, IntegerField, CharField, BooleanField
+from django.db.models import Q, Case, When, Value, F, Subquery, OuterRef, Count, Exists, IntegerField, DateTimeField, BooleanField, DurationField, ExpressionWrapper
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import io
@@ -28,6 +28,8 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework.permissions import AllowAny
+from django.utils import timezone
+
 
 
 class DepartmentListView(generics.ListAPIView):
@@ -117,6 +119,7 @@ class RecordListView(generics.ListAPIView):
         priority = self.request.GET.get('priority')
         search = self.request.GET.get('search')
         _id = self.request.GET.get('id')
+        order_by = self.request.GET.get('order_by')
 
 
         user = self.request.user
@@ -124,6 +127,10 @@ class RecordListView(generics.ListAPIView):
         assigned_roles = user.roles.all()
 
         all_roles = Roles.objects.filter(organization=user.organization)
+
+        last_role = all_roles.filter(next_level__isnull=True).first()
+
+        last_role_users = last_role.role_users.all()
 
         qs = self.queryset.annotate(
             approved_roles_count=Count(
@@ -166,6 +173,79 @@ class RecordListView(generics.ListAPIView):
             )
         
         qs = qs.annotate(
+            duration=Case(
+                When(
+                    Q(status='Pending'),
+                    then=ExpressionWrapper(
+                        timezone.now() -
+                        ExpressionWrapper(
+                            Case(
+                                When(
+                                    Q(logs__isnull=False),
+                                    then=RecordLog.objects.filter(
+                                    record_id=OuterRef('id'),
+                                    action='approved'
+                                    ).order_by('-created_at').values('created_at')[:1]
+                                    ),
+                                default=F('created_at'),
+                                output_field=DateTimeField()
+                            ),
+                        output_field=DateTimeField(),
+                        ),
+                        output_field=DurationField()
+                    )
+                ),
+
+
+                When(
+                    Q(status='Approved'),
+                    then=ExpressionWrapper(
+                    timezone.now() -
+                    Subquery(
+                        RecordLog.objects.filter(
+                            record_id=OuterRef('id'),
+                            created_by=user,
+                            action='approved'
+                        ).order_by('-created_at').values('created_at')[:1]
+                ),
+                output_field=DurationField()
+                )
+                ),
+                When(
+                    Q(status='Rejected'),
+                    then=ExpressionWrapper(
+                    timezone.now() -
+                    Subquery(
+                        RecordLog.objects.filter(
+                            record_id=OuterRef('id'),
+                            created_by=user,
+                            action='rejected'
+                        ).order_by('-created_at').values('created_at')[:1]
+                ),
+                output_field=DurationField()
+                )
+                ),
+                When(
+                    Q(status='Settled'),
+                    then=ExpressionWrapper(
+                    timezone.now() -
+                    Subquery(
+                        RecordLog.objects.filter(
+                            record_id=OuterRef('id'),
+                            created_by__in=last_role_users,
+                            action='approved'
+                        ).order_by('-created_at').values('created_at')[:1]
+                ),
+                output_field=DurationField()
+                )
+                ),
+
+                default=None,
+                output_field=DurationField()
+            )
+        )
+        
+        qs = qs.annotate(
             at_initial_role=Case(
                 When(role_level__prev_level__isnull=True, then=Value(True, BooleanField())),
                 default=Value(False, BooleanField())
@@ -191,6 +271,11 @@ class RecordListView(generics.ListAPIView):
 
         if search:
             qs = qs.filter(Q(note_sheet_no__icontains=search))
+
+        
+        if order_by:
+            if order_by in ['duration', '-duration']:
+                qs =  qs.order_by(order_by)
 
         return qs
         

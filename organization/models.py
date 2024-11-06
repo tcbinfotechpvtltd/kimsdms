@@ -74,7 +74,7 @@ class Record(TimeStamp):
     record_name = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
-        return f"PO {self.po_number} - {self.supplier_name}"
+        return f"PO {self.po_number} - {self.supplier_name} ({self.id})"
 
     class Meta:
         verbose_name = "Record"
