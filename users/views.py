@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import generics
 from organization.permissions import authenticate_access_key
 from django.conf import settings
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny
 from botocore.exceptions import NoCredentialsError, ClientError
 import boto3,os,json
@@ -188,6 +189,7 @@ class UserSapUpdate(UpdateAPIView):
 class UserUpdate(UpdateAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    parser_classes = [MultiPartParser] 
 
     def get_object(self):
         try:
