@@ -31,8 +31,8 @@ class UserSerializer(serializers.ModelSerializer):
         allow_null=True,  # Allow null values
         source='roles'
     )
-    photo = serializers.SerializerMethodField()
-    signature = serializers.SerializerMethodField()
+    photo = serializers.ImageField(required=False, allow_null=True)
+    signature = serializers.ImageField(required=False, allow_null=True)
 
 
     class Meta:
@@ -47,14 +47,14 @@ class UserSerializer(serializers.ModelSerializer):
             'username': {'required': True, 'allow_blank': False},
         }
 
-    def get_photo(self, obj):
-        # Return the relative path without MEDIA_URL
-        return obj.photo.name if obj.photo else None
-    
-    def get_signature(self, obj):
-        # Return the relative path without MEDIA_URL
-        return obj.signature.name if obj.signature else None
-
+    def to_representation(self, instance):
+        # Customize the representation of photo and signature URLs
+        representation = super().to_representation(instance)
+        if instance.photo:
+            representation['photo'] = instance.photo.name  # Adjust as needed
+        if instance.signature:
+            representation['signature'] = instance.signature.name  # Adjust as needed
+        return representation
 
     def validate_photo(self, value):
         if not value.name.endswith(('.png', '.jpg', '.jpeg', '.gif')):
