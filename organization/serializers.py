@@ -83,7 +83,9 @@ class RecordListSerializer(serializers.ModelSerializer):
             'priority',
             'at_initial_role',
             'note_sheet_url',
-            'duration'
+            'duration',
+            'phase',
+            'data_source'
         ]
 
 
@@ -213,6 +215,8 @@ class SapRecordSerializer(serializers.ModelSerializer):
             'amount_to_be_paid',
             'advance_amount',
             'tds_amount',
+            'phase',
+            'data_source'
         ]
 
 
