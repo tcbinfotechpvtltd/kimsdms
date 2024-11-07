@@ -8,15 +8,78 @@ from rest_framework.authtoken.models import Token
 from .serializers import RecordLogSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import generics
+from organization.permissions import authenticate_access_key
 from django.conf import settings
+from rest_framework.permissions import AllowAny
 from botocore.exceptions import NoCredentialsError, ClientError
-import boto3,os
+import boto3,os,json
 
 # Create your views here.
 class UserCreate(CreateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [AllowAny]
     queryset = User.objects.all()  #
+
+    def perform_create(self, serializer):
+        # Create user with validated data
+        serializer.save()
     
+    def upload_to_s3(self, file, path):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
+        try:
+            s3_client.upload_fileobj(file, settings.AWS_STORAGE_BUCKET_NAME, path)
+            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{path}"
+            return file_url
+        except (NoCredentialsError, ClientError) as e:
+            raise NotFound(f"Failed to upload file to S3: {str(e)}")
+        
+    def create(self, request, *args, **kwargs):
+        # Create a new user instance with validated data
+        is_success, resp = authenticate_access_key(request)
+        if is_success:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            # Create the user
+            user = serializer.save()
+
+            # Get files and other data from request
+            photo = request.FILES.get('photo')
+            signature = request.FILES.get('signature')
+            contact = request.data.get('contact')
+            role_ids = request.data.get('role_ids', [])
+
+            # Upload files to S3 and update URLs in user instance
+            if photo:
+                photo_extension = os.path.splitext(photo.name)[1]
+                photo_path = f"media/users/{user.id}/profile_pic{photo_extension}"
+                user.photo = self.upload_to_s3(photo, photo_path)
+
+            if signature:
+                signature_extension = os.path.splitext(signature.name)[1]
+                signature_path = f"media/users/{user.id}/signature{signature_extension}"
+                user.signature = self.upload_to_s3(signature, signature_path)
+
+            if contact:
+                user.contact = contact
+
+            # Assign roles to the user
+            if role_ids:
+                if isinstance(role_ids, str):
+                    role_ids = json.loads(role_ids)
+                user.roles.set(role_ids)  # Assign the provided roles to the user
+
+            user.save()  # Save the user with updated fields (roles, files, etc.)
+
+            # Return the serialized user data
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return resp
 class UserView(ListAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.filter(is_delete=False)# Define the queryset to return all users
@@ -64,6 +127,64 @@ class UserDetail(RetrieveAPIView):
         
         # Return the final data in the response
         return Response(user_data)
+class UserSapUpdate(UpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+    queryset = User.objects.all()
+
+    def get_object(self):
+        try:
+            return get_object_or_404(User, pk=self.kwargs['pk'])
+        except Http404:
+            raise NotFound("User does not exist.")
+
+    def upload_to_s3(self, file, path):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
+        try:
+            s3_client.upload_fileobj(file, settings.AWS_STORAGE_BUCKET_NAME, path)
+            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{path}"
+            return file_url
+        except (NoCredentialsError, ClientError) as e:
+            raise NotFound(f"Failed to upload file to S3: {str(e)}")
+
+    def update(self, request, *args, **kwargs):
+       
+        is_success, resp = authenticate_access_key(request)
+        if is_success:
+            user = self.get_object()
+            photo = request.FILES.get('photo')
+            signature = request.FILES.get('signature')
+            contact = request.data.get('contact')
+            role_ids = request.data.get('role_ids', [])
+
+            # Upload files to S3 and update URLs in user instance
+            if photo:
+                photo_extension = os.path.splitext(photo.name)[1]
+                photo_path = f"media/users/{user.id}/profile_pic{photo_extension}"
+                user.photo = self.upload_to_s3(photo, photo_path)
+
+            if signature:
+                signature_extension = os.path.splitext(signature.name)[1]
+                signature_path = f"media/users/{user.id}/signature{signature_extension}"
+                user.signature = self.upload_to_s3(signature, signature_path)
+            if contact:
+                user.contact = contact
+            if role_ids:
+                if isinstance(role_ids, str):
+                    role_ids = json.loads(role_ids)
+                user.roles.set(role_ids)  # Assign the provided roles to the user
+            
+            user.save()
+
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return resp
+
 class UserUpdate(UpdateAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
@@ -93,6 +214,7 @@ class UserUpdate(UpdateAPIView):
         photo = request.FILES.get('photo')
         signature = request.FILES.get('signature')
         contact = request.data.get('contact')
+        role_ids = request.data.get('role_ids', [])
 
         # Upload files to S3 and update URLs in user instance
         if photo:
@@ -106,12 +228,15 @@ class UserUpdate(UpdateAPIView):
             user.signature = self.upload_to_s3(signature, signature_path)
         if contact:
             user.contact = contact
+        if role_ids:
+            if isinstance(role_ids, str):
+                role_ids = json.loads(role_ids)
+            user.roles.set(role_ids)  # Assign the provided roles to the user
         
         user.save()
 
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 class UserSoftDelete(DestroyAPIView):
     queryset = User.objects.all()
