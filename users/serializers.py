@@ -202,24 +202,25 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
             s3 = S3Storage()
 
-            photo_local_path = user.photo.path
-            photo_relative_path = 'media/' + user.photo.url.split('media/')[1]
+            if user.photo:
+                photo_local_path = user.photo.path
+                photo_relative_path = 'media/' + user.photo.url.split('media/')[1]
 
-            res = s3.upload_s3_file(local_source_path=photo_local_path, file_relative_path=photo_relative_path)
-            
-            try:
-                os.unlink(photo_local_path)
-            except: pass
+                res = s3.upload_s3_file(local_source_path=photo_local_path, file_relative_path=photo_relative_path)
+                
+                try:
+                    os.unlink(photo_local_path)
+                except: pass
 
+            if user.signature:
+                signature_local_path = user.signature.path
+                signature_relative_path = 'media/' + user.signature.url.split('media/')[1]
 
-            signature_local_path = user.signature.path
-            signature_relative_path = 'media/' + user.signature.url.split('media/')[1]
-
-            res = s3.upload_s3_file(local_source_path=signature_local_path, file_relative_path=signature_relative_path)
-            
-            try:
-                os.unlink(signature_local_path)
-            except: pass
+                res = s3.upload_s3_file(local_source_path=signature_local_path, file_relative_path=signature_relative_path)
+                
+                try:
+                    os.unlink(signature_local_path)
+                except: pass
         except:
             pass
         
