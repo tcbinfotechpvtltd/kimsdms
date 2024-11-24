@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
 from organization.permissions import authenticate_access_key
+from organization.utils import generate_notesheet_report
 from users.models import RecordLog
 from users.serializers import RecordLogSerializer
 from .models import RecordDocument, RecordRoleStatus, Roles
@@ -13,7 +14,8 @@ from .serializers import ActionSerializer, DocumentSerializer, RecordListSeriali
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
-from django.db.models import Q, Case, When, Value, F, Subquery, OuterRef, Count, Exists, IntegerField, DateTimeField, BooleanField, DurationField, ExpressionWrapper
+from django.db.models import Q, Case, When, Value, F, Subquery, OuterRef, Count, Exists, IntegerField, DateTimeField, BooleanField, DurationField, ExpressionWrapper, CharField
+from django.db.models.functions import Concat
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import io
@@ -452,6 +454,10 @@ class ActionAPIView(APIView):
                     role=record.role_level,
                     is_approved = True if action == 'approved' else False
                 )
+
+
+        if action == 'approved':
+            path = generate_notesheet_report(record)
                 
         message = f'You have {action} this document'
         return Response(
@@ -567,9 +573,14 @@ def generate_report_pdf(request):
     'approved_users': RecordRoleStatus.objects.filter(record=record, is_approved=True).annotate(
         first_name = F('log__created_by__first_name'),
         last_name = F('log__created_by__last_name'),
-        date = F('log__created_at')
+        date = F('log__created_at'),
+        photo=Concat(
+        Value(settings.MEDIA_URL),
+        F('log__created_by__photo'),
+        output_field=CharField()
+    )
     ).values(
-        'first_name', 'last_name', 'date'
+        'first_name', 'last_name', 'date', 'photo'
     )
     }
 
