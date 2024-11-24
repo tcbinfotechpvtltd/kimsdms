@@ -84,6 +84,26 @@
                     font-size: 16px;
                 }
             }
+            {% comment %} .signature-image {
+                max-width: 100px; /* Limit the width to 100px */
+                max-height: 100px; /* Limit the height to 100px */
+                min-width: 100px; /* Limit the width to 100px */
+                min-height: 100px; /* Limit the height to 100px */
+                display: block; /* Ensures proper spacing */
+                margin: auto; /* Centers the image horizontally if within a block container */
+                border: 1px solid #ccc; /* Adds a subtle border */
+                border-radius: 5px; /* Optional: Makes the image corners rounded */
+            } {% endcomment %}
+
+            .signature-image {
+                width: 100%; /* Ensures the image stretches to the full width of the container */
+                height: 100%; /* Ensures the image stretches to the full height of the container */
+                object-fit: cover; /* Ensures the image covers the container without distortion */
+                display: block; /* Removes inline spacing issues */
+                border: 1px solid #ccc; /* Optional: Adds a subtle border */
+                border-radius: 5px; /* Optional: Makes the corners rounded */
+            }
+            
         </style>
     </head>
     <body>
@@ -210,7 +230,14 @@
                 <td></td>
                 <td>{{user.first_name}} {{user.last_name}}</td>
                 <td></td>
-                <td>Signed by {{user.first_name}}</td>
+                {% if user.photo %}
+                <td>
+                    <img src="{{ user.photo }}" alt="Signature image" class='signature-image'/>
+                </td>
+                {% else %}
+                    <td>Signed by {{user.first_name}}</td>
+                {% endif %}
+
                 <td></td>
                 <td>{{user.date}}</td>
             </tr>

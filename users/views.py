@@ -5,7 +5,7 @@ from rest_framework.exceptions import NotFound
 from .models import User
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from .serializers import RecordLogSerializer, UserSerializer
+from .serializers import RecordLogSerializer, UserCreateSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import generics
 from organization.permissions import authenticate_access_key
@@ -255,3 +255,14 @@ class UserSoftDelete(DestroyAPIView):
         user.is_delete = True  # Soft delete the user
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+class UserCreateNew(CreateAPIView):
+    serializer_class = UserCreateSerializer
+    queryset = User.objects.all()
+    parser_classes = [MultiPartParser] 
+    
+        
+
+    
