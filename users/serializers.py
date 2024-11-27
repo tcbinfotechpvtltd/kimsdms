@@ -1,11 +1,12 @@
 import os
 from rest_framework import serializers
-
+import ast
 from Dms.common.s3_util import S3Storage
 from .models import RecordLog, User
 from rest_framework.exceptions import ValidationError
 from organization.models import Roles, Organization
 from django.db import transaction
+from django.conf import settings
 
 class RolesDataSerializer(serializers.ModelSerializer):
     class Meta:
@@ -136,12 +137,14 @@ class RecordLogSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    roles = serializers.CharField(write_only=True)
+    role_ids = serializers.CharField( # Ensure each item in the list is an integer (role ID)
+        write_only=True
+    )
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'password', 'is_admin',
-            'organization', 'roles',"first_name","last_name","photo","signature","contact"
+            'organization', 'role_ids',"first_name","last_name","photo","signature","contact"
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -155,8 +158,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             representation['photo'] = instance.photo.url  
         if instance.signature:
             representation['signature'] = instance.signature.url  
-        
-        representation['roles'] = RolesDataSerializer(instance.roles.all(), many=True).data
+
         return representation
 
     def validate_photo(self, value):
@@ -184,46 +186,64 @@ class UserCreateSerializer(serializers.ModelSerializer):
     
     @transaction.atomic
     def create(self, validated_data):
-        roles = validated_data.pop('roles', '')
+        validated_data['role_ids'] = ast.literal_eval(validated_data['role_ids']) if isinstance(validated_data['role_ids'], str) else validated_data['role_ids']
+        roles = validated_data.pop('role_ids', '')
         photo = validated_data.pop('photo', None)
         signature = validated_data.pop('signature', None)
-
-
+        validated_data['organization_id'] =1
         user = User.objects.create_user(**validated_data)
 
-        roles_data = roles.split(',')
+        roles_data = roles
         if roles_data:
             user.roles.set(roles_data)
-        user.photo = photo
-        user.signature = signature
-        user.save()
+        s3 = S3Storage()
+        if photo:
+            user.photo = photo
+            user.save()  # Save user first to upload photo to S3 and generate its name in the DB
+            
+            try:
+                
 
-        try:
-
-            s3 = S3Storage()
-
-            if user.photo:
+                # Upload photo to S3
                 photo_local_path = user.photo.path
                 photo_relative_path = 'media/' + user.photo.url.split('media/')[1]
-
                 res = s3.upload_s3_file(local_source_path=photo_local_path, file_relative_path=photo_relative_path)
-                
-                try:
-                    os.unlink(photo_local_path)
-                except: pass
 
-            if user.signature:
+                # Remove the local photo file
+                if os.path.exists(photo_local_path):
+                    os.unlink(photo_local_path)
+
+                # Update photo URL in the database
+                user.photo = f"{settings.MEDIA_URL}{user.photo.name}"  # Add MEDIA_URL to the file name
+
+            except Exception as e:
+                print(f"Error uploading photo to S3: {e}")
+                # Handle error if needed (e.g., set a default image or leave the field as is)
+                pass
+
+        # Handle signature upload to S3 if provided
+        if signature:
+            user.signature = signature
+            user.save()  # Save user first to upload signature to S3 and generate its name in the DB
+            
+            try:
+                # Upload signature to S3
                 signature_local_path = user.signature.path
                 signature_relative_path = 'media/' + user.signature.url.split('media/')[1]
-
                 res = s3.upload_s3_file(local_source_path=signature_local_path, file_relative_path=signature_relative_path)
-                
-                try:
+
+                # Remove the local signature file
+                if os.path.exists(signature_local_path):
                     os.unlink(signature_local_path)
-                except: pass
-        except:
-            pass
-        
+
+                # Update signature URL in the database
+                user.signature = f"{settings.MEDIA_URL}{user.signature.name}"  # Add MEDIA_URL to the file name
+
+            except Exception as e:
+                print(f"Error uploading signature to S3: {e}")
+                # Handle error if needed (e.g., set a default signature or leave the field as is)
+                pass
+        user.save()
 
         return user
     

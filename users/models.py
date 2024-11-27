@@ -3,14 +3,16 @@ from django.contrib.auth.models import AbstractUser
 
 from Dms.common.models import CreatorUpdator, TimeStamp
 from organization.models import Record, RecordDocument, Roles
+import os
 
 
 def get_photo_upload_path(instance, file_name):
-    return f'user_profile_pics/{instance.id}/{file_name}'
+    photo_extension = os.path.splitext(file_name)[1]
+    return f'users/{instance.id}/profile_pic{photo_extension}'
 
 def get_signature_upload_path(instance, file_name):
-    return f'user_signatures/{instance.id}/{file_name}'
-
+    sign_extension = os.path.splitext(file_name)[1]
+    return f'user/{instance.id}/signature{sign_extension}'
 
 class User(AbstractUser):
     organization = models.ForeignKey('organization.Organization', on_delete=models.CASCADE, related_name='org_users', null=True, blank=True)
