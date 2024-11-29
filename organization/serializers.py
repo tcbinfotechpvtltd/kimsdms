@@ -2,7 +2,7 @@ from django.forms import ValidationError
 from rest_framework import serializers
 
 from users.serializers import RecordLogSerializer
-from .models import Organization, RecordDocument, Roles
+from .models import FlowPipeLine, Organization, RecordDocument, Roles, Workflow
 from .models import Record, DepartMent
 from django.utils import timezone
 from users.models import RecordLog, User
@@ -222,13 +222,28 @@ class SapRecordSerializer(serializers.ModelSerializer):
             'data_source'
         ]
 
+    def validate(self, data):
+        data_source = data.get('data_source')
+        workflow = Workflow.objects.filter(work_flow_sloc=data_source).first()
+
+        if not workflow:
+            raise ValidationError(message='data_source is not valid for any existing workflow')
+        
+        data['workflow'] = workflow
+
+        return data
+
+
 
     def create(self, validated_data):
         organization = Organization.objects.filter(short_uniq_name='sap').first()
         if not organization:
             raise ValidationError(message='No organization object found for SAP')
         
-        role = Roles.objects.filter(organization=organization, prev_level__isnull=True).first()
+        workflow = validated_data['workflow']
+
+        initial_pipeline = FlowPipeLine.objects.filter(workflow=workflow, wf_prev_level__isnull=True).first()
+        role = initial_pipeline.role
 
         validated_data['organization'] = organization
         validated_data['role_level'] = role

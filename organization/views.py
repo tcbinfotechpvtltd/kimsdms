@@ -9,7 +9,7 @@ from organization.permissions import authenticate_access_key
 from organization.utils import generate_notesheet_report
 from users.models import RecordLog
 from users.serializers import RecordLogSerializer
-from .models import RecordDocument, RecordRoleStatus, Roles
+from .models import FlowPipeLine, RecordDocument, RecordRoleStatus, Roles
 from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
@@ -116,6 +116,177 @@ class RecordListView(generics.ListAPIView):
         )
     ])
 
+    # def get_queryset(self):
+    #     department_sloc = self.request.GET.get('department_sloc')
+    #     status = self.request.GET.get('status')
+    #     priority = self.request.GET.get('priority')
+    #     search = self.request.GET.get('search')
+    #     _id = self.request.GET.get('id')
+    #     order_by = self.request.GET.get('order_by')
+
+
+    #     user = self.request.user
+
+    #     assigned_roles = user.roles.all()
+
+    #     all_roles = Roles.objects.filter(organization=user.organization)
+
+    #     last_role = all_roles.filter(next_level__isnull=True).first()
+
+    #     last_role_users = last_role.role_users.all()
+
+    #     qs = self.queryset.annotate(
+    #         approved_roles_count=Count(
+    #             'approved_by',
+    #             filter=Q(approved_by__in=all_roles),
+    #             distinct=True
+    #         ),
+    #         all_roles_count=Value(len(all_roles), output_field=IntegerField()),
+    #         department_name=Subquery(
+    #             DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
+    #             )
+    #     )
+
+    #     qs = qs.annotate(
+    #         is_pending=Exists(
+    #             qs.filter(role_level__in=assigned_roles, id=(OuterRef('id')))
+    #                 .exclude(approved_by__in=assigned_roles, id=(OuterRef('id')))
+    #                 .exclude(rejected_by__in=assigned_roles, id=(OuterRef('id')))
+    #         ),
+    #         is_approved=Exists(
+    #             qs.filter(approved_by__in=assigned_roles, id=(OuterRef('id'))).
+    #                 exclude(
+    #                 Q(approved_roles_count=F('all_roles_count'), id=(OuterRef('id')))
+    #             )
+    #         ),
+    #         is_rejected=Exists(
+    #             qs.filter(rejected_by__isnull=False, id=(OuterRef('id')))
+    #         ),
+    #         )
+        
+    #     qs = qs.annotate(
+    #         status = Case(
+    #             When(approved_roles_count=F('all_roles_count'), then=Value("Settled")),
+    #             When(is_pending=True, then=Value('Pending')),
+    #             When(is_approved=True, then=Value('Approved')),
+    #             When(is_rejected=True, then=Value('Rejected')),
+    #         )
+    #     ).filter(
+    #         status__isnull=False
+    #         )
+        
+    #     qs = qs.annotate(
+    #         duration=Case(
+    #             When(
+    #                 Q(status='Pending'),
+    #                 then=ExpressionWrapper(
+    #                     timezone.now() -
+    #                     ExpressionWrapper(
+    #                         Case(
+    #                             When(
+    #                                 Q(logs__isnull=False),
+    #                                 then=RecordLog.objects.filter(
+    #                                 record_id=OuterRef('id'),
+    #                                 action='approved'
+    #                                 ).order_by('-created_at').values('created_at')[:1]
+    #                                 ),
+    #                             default=F('created_at'),
+    #                             output_field=DateTimeField()
+    #                         ),
+    #                     output_field=DateTimeField(),
+    #                     ),
+    #                     output_field=DurationField()
+    #                 )
+    #             ),
+
+
+    #             When(
+    #                 Q(status='Approved'),
+    #                 then=ExpressionWrapper(
+    #                 timezone.now() -
+    #                 Subquery(
+    #                     RecordLog.objects.filter(
+    #                         record_id=OuterRef('id'),
+    #                         created_by=user,
+    #                         action='approved'
+    #                     ).order_by('-created_at').values('created_at')[:1]
+    #             ),
+    #             output_field=DurationField()
+    #             )
+    #             ),
+    #             When(
+    #                 Q(status='Rejected'),
+    #                 then=ExpressionWrapper(
+    #                 timezone.now() -
+    #                 Subquery(
+    #                     RecordLog.objects.filter(
+    #                         record_id=OuterRef('id'),
+    #                         created_by=user,
+    #                         action='rejected'
+    #                     ).order_by('-created_at').values('created_at')[:1]
+    #             ),
+    #             output_field=DurationField()
+    #             )
+    #             ),
+    #             When(
+    #                 Q(status='Settled'),
+    #                 then=ExpressionWrapper(
+    #                 timezone.now() -
+    #                 Subquery(
+    #                     RecordLog.objects.filter(
+    #                         record_id=OuterRef('id'),
+    #                         created_by__in=last_role_users,
+    #                         action='approved'
+    #                     ).order_by('-created_at').values('created_at')[:1]
+    #             ),
+    #             output_field=DurationField()
+    #             )
+    #             ),
+
+    #             default=None,
+    #             output_field=DurationField()
+    #         )
+    #     )
+        
+    #     qs = qs.annotate(
+    #         at_initial_role=Case(
+    #             When(role_level__prev_level__isnull=True, then=Value(True, BooleanField())),
+    #             default=Value(False, BooleanField())
+    #         )
+    #     )
+        
+    #     if _id:
+    #         qs = qs.filter(id=_id)
+    #         return qs
+
+    #     if department_sloc:
+    #         qs = qs.filter(department_sloc=department_sloc)
+
+    #     if status:
+    #         qs = qs.filter(
+    #             status=status
+    #         )
+
+    #     if priority:
+    #         if priority == 'medium':
+    #             priority = 'med'
+    #         qs = qs.filter(priority=priority, status='Pending')
+
+    #     if search:
+    #         qs = qs.filter(Q(note_sheet_no__icontains=search))
+
+        
+    #     if order_by:
+    #         if order_by in ['duration', '-duration']:
+    #             qs =  qs.order_by(order_by)
+
+    #     return qs
+    
+
+
+
+
+
     def get_queryset(self):
         department_sloc = self.request.GET.get('department_sloc')
         status = self.request.GET.get('status')
@@ -129,19 +300,19 @@ class RecordListView(generics.ListAPIView):
 
         assigned_roles = user.roles.all()
 
-        all_roles = Roles.objects.filter(organization=user.organization)
+        # all_roles = Roles.objects.filter(organization=user.organization)
 
-        last_role = all_roles.filter(next_level__isnull=True).first()
+        # last_role = all_roles.filter(next_level__isnull=True).first()
 
-        last_role_users = last_role.role_users.all()
+        # last_role_users = last_role.role_users.all()
 
         qs = self.queryset.annotate(
-            approved_roles_count=Count(
-                'approved_by',
-                filter=Q(approved_by__in=all_roles),
-                distinct=True
-            ),
-            all_roles_count=Value(len(all_roles), output_field=IntegerField()),
+            # approved_roles_count=Count(
+            #     'approved_by',
+            #     filter=Q(approved_by__in=all_roles),
+            #     distinct=True
+            # ),
+            # all_roles_count=Value(len(all_roles), output_field=IntegerField()),
             department_name=Subquery(
                 DepartMent.objects.filter(sloc=OuterRef('department_sloc')).values('name')[:1]
                 )
@@ -156,7 +327,7 @@ class RecordListView(generics.ListAPIView):
             is_approved=Exists(
                 qs.filter(approved_by__in=assigned_roles, id=(OuterRef('id'))).
                     exclude(
-                    Q(approved_roles_count=F('all_roles_count'), id=(OuterRef('id')))
+                    Q(is_settled=True, id=(OuterRef('id')))
                 )
             ),
             is_rejected=Exists(
@@ -166,7 +337,7 @@ class RecordListView(generics.ListAPIView):
         
         qs = qs.annotate(
             status = Case(
-                When(approved_roles_count=F('all_roles_count'), then=Value("Settled")),
+                When(is_settled=True, then=Value("Settled")),
                 When(is_pending=True, then=Value('Pending')),
                 When(is_approved=True, then=Value('Approved')),
                 When(is_rejected=True, then=Value('Rejected')),
@@ -235,7 +406,7 @@ class RecordListView(generics.ListAPIView):
                     Subquery(
                         RecordLog.objects.filter(
                             record_id=OuterRef('id'),
-                            created_by__in=last_role_users,
+                            # created_by__in=last_role_users,
                             action='approved'
                         ).order_by('-created_at').values('created_at')[:1]
                 ),
@@ -276,11 +447,18 @@ class RecordListView(generics.ListAPIView):
             qs = qs.filter(Q(note_sheet_no__icontains=search))
 
         
+        
+
+        qs = qs.order_by('id').distinct('id')
+
         if order_by:
             if order_by in ['duration', '-duration']:
-                qs =  qs.order_by(order_by)
+                qs =  qs.order_by( 'id', order_by)
 
         return qs
+        
+   
+
         
    
 
@@ -402,22 +580,56 @@ class ActionAPIView(APIView):
 
         approve_reject_by = None
 
+        # if action == 'approved':
+        #     if record.role_level:
+        #         approve_reject_by = record.role_level
+        #         if hasattr(record.role_level, 'next_level'):
+        #             record.role_level = record.role_level.next_level
+        #         record.approved_by.add(approve_reject_by)
+        #         record.rejected_by = None
+        #         record.save()
+
         if action == 'approved':
             if record.role_level:
                 approve_reject_by = record.role_level
-                if hasattr(record.role_level, 'next_level'):
-                    record.role_level = record.role_level.next_level
+                pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
+                if pipeline and hasattr(pipeline, 'wf_next_level'):
+                    next_pipe_line = pipeline.wf_next_level
+                    next_role = next_pipe_line.role
+                    record.role_level = next_role
                 record.approved_by.add(approve_reject_by)
                 record.rejected_by = None
                 record.save()
+
+        # elif action == 'rejected':
+        #     if record.role_level:
+        #         record.approved_by.clear() # clearing all approves
+        #         approve_reject_by = record.role_level
+        #         if hasattr(record.role_level, 'prev_level'):
+        #             record.role_level = Roles.objects.filter(organization=user.organization, prev_level__isnull=True).first()  # shifting it to initial role
+        #         record.rejected_by = approve_reject_by
+        #         record.save()
 
         elif action == 'rejected':
             if record.role_level:
                 record.approved_by.clear() # clearing all approves
                 approve_reject_by = record.role_level
-                if hasattr(record.role_level, 'prev_level'):
-                    record.role_level = Roles.objects.filter(organization=user.organization, prev_level__isnull=True).first()  # shifting it to initial role
+                pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
+                if pipeline and hasattr(pipeline, 'wf_prev_level'):
+                    initial_pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, wf_prev_level__isnull=True).first()
+                    record.role_level = initial_pipeline.role # shifting it to initial role
                 record.rejected_by = approve_reject_by
+                record.save()
+
+
+        if action == 'approved':
+            workflow_roles = set(
+                FlowPipeLine.objects.filter(workflow=record.workflow).values_list('role', flat=True)
+            )
+            approved_roles = set(record.approved_by.all().values_list('id', flat=True))
+            
+            if workflow_roles == approved_roles:
+                record.is_settled = True
                 record.save()
 
             
