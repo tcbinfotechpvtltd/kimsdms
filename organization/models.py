@@ -40,6 +40,26 @@ class Roles(TimeStamp):
 
 
 
+class Workflow(models.Model):
+    work_flow_name = models.CharField(max_length=100, null=True, blank=True)
+    work_flow_sloc = models.CharField(max_length=100, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.work_flow_name + " / " + self.work_flow_sloc
+
+
+class FlowPipeLine(models.Model):
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE)
+    role = models.ForeignKey(Roles, on_delete=models.CASCADE)
+    wf_prev_level = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='wf_next_level')
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return str(self.workflow) + " / " + str(self.role)
+
+
+
 class Record(TimeStamp):
     priority_choices = (
         ('high', 'high'),
@@ -69,11 +89,13 @@ class Record(TimeStamp):
     role_level = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='pending_docs')
     approved_by = models.ManyToManyField(Roles, related_name='approved_docs')
     rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
+    is_settled = models.BooleanField(default=False)
 
     note_sheet_url = models.URLField(null=True, blank=True)
     record_name = models.CharField(max_length=300, null=True, blank=True)
     phase = models.PositiveIntegerField(null=True, blank=True)
     data_source = models.CharField(max_length=100, null=True, blank=True)
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name} ({self.id})"
@@ -113,3 +135,14 @@ class RecordRoleStatus(models.Model):
     log = models.ForeignKey('users.RecordLog', on_delete=models.CASCADE, null=True, blank=True)
 
 
+class WorkFlowLog(models.Model):
+    STATUS = (
+        ('pending', 'pending'),
+        ('approved', 'approved'),
+        ('rejected', 'rejected'),
+
+    )
+    flow_pipe_line = models.OneToOneField(FlowPipeLine, on_delete=models.CASCADE)
+    record = models.ForeignKey(Record, on_delete=models.CASCADE)
+    status = models.CharField(choices=STATUS)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
