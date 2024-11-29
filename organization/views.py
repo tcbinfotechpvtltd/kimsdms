@@ -788,11 +788,12 @@ def generate_report_pdf(request):
         date = F('log__created_at'),
         photo=Concat(
         Value(settings.MEDIA_URL),
-        F('log__created_by__photo'),
+        F('log__created_by__signature'),
         output_field=CharField()
-    )
+        ),
+        role_name = F('role__role_name')
     ).values(
-        'first_name', 'last_name', 'date', 'photo'
+        'first_name', 'last_name', 'date', 'photo', 'role_name'
     )
     }
 
