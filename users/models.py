@@ -21,6 +21,8 @@ class User(AbstractUser):
     photo = models.ImageField(upload_to=get_photo_upload_path, null=True, blank=True)
     signature = models.ImageField(upload_to=get_signature_upload_path, null=True, blank=True)
     contact = models.CharField(max_length=15, null=True, blank=True)  # New field for contact number
+    is_online = models.BooleanField(default=False)
+    channel_name = models.CharField(max_length=200, null=True, blank=True)
 
 
 class RecordLog(CreatorUpdator, TimeStamp):
