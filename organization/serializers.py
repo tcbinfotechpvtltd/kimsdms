@@ -26,7 +26,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = RecordDocument
         fields = '__all__'
 
-    
+
     def create(self, validated_data):
         record = validated_data.get('record')
 
@@ -108,7 +108,7 @@ class RecordListSerializer(serializers.ModelSerializer):
         rp['docs'] = docs
 
         return rp
-    
+
 
 
 class RecordRetrieveSerializer(serializers.ModelSerializer):
@@ -228,7 +228,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
 
         if not workflow:
             raise ValidationError(message='data_source is not valid for any existing workflow')
-        
+
         data['workflow'] = workflow
 
         return data
@@ -239,7 +239,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
         organization = Organization.objects.filter(short_uniq_name='sap').first()
         if not organization:
             raise ValidationError(message='No organization object found for SAP')
-        
+
         workflow = validated_data['workflow']
 
         initial_pipeline = FlowPipeLine.objects.filter(workflow=workflow, wf_prev_level__isnull=True).first()
@@ -262,15 +262,15 @@ class ActionSerializer(serializers.Serializer):
     )
     action = serializers.ChoiceField(choices=ACTIONS)
     record_id = serializers.IntegerField()
-    
+
     # Comment is optional and can be blank or null
     comment = serializers.CharField(
-        max_length=1000, 
-        required=False, 
+        max_length=1000,
+        required=False,
         allow_blank=True,  # Allows an empty string
         allow_null=True    # Allows null values (None)
     )
-    
+
     # File is optional
     file = serializers.FileField(required=False, allow_null=True)
 
@@ -286,7 +286,7 @@ class ActionSerializer(serializers.Serializer):
 
         if action == 'attached' and not data.get('file'):
             raise serializers.ValidationError({"file": "File is required for the 'attached' action."})
-        
+
 
         _id = data.get('record_id')
         record =  Record.objects.filter(id=_id).first()
@@ -296,5 +296,13 @@ class ActionSerializer(serializers.Serializer):
 
 
         return data
-       
 
+
+class UpdateRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Record
+        fields = [
+            "id",
+            "advance_amount",
+            "tds_amount",
+        ]
