@@ -10,7 +10,7 @@ from organization.utils import generate_notesheet_report
 from users.models import RecordLog
 from users.serializers import RecordLogSerializer
 from .models import FlowPipeLine, RecordDocument, RecordRoleStatus, Roles
-from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer
+from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer, UpdateRecordSerializer
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
@@ -40,7 +40,7 @@ class DepartmentListView(generics.ListAPIView):
     serializer_class = DepartmentSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_fields = ['organization']
- 
+
 
 
 class RolesListCreateAPIView(generics.ListCreateAPIView):
@@ -58,13 +58,16 @@ class RecordCreateView(generics.CreateAPIView):
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
 
+class RecordUpdateView(generics.UpdateAPIView):
+    queryset = Record.objects.all()
+    serializer_class = UpdateRecordSerializer
 
 class SapRecordCreateView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     queryset = Record.objects.all()
     serializer_class = SapRecordSerializer
 
-    
+
     def create(self, request, *args, **kwargs):
         is_success, resp = authenticate_access_key(request)
         if is_success:
@@ -163,7 +166,7 @@ class RecordListView(generics.ListAPIView):
     #             qs.filter(rejected_by__isnull=False, id=(OuterRef('id')))
     #         ),
     #         )
-        
+
     #     qs = qs.annotate(
     #         status = Case(
     #             When(approved_roles_count=F('all_roles_count'), then=Value("Settled")),
@@ -174,7 +177,7 @@ class RecordListView(generics.ListAPIView):
     #     ).filter(
     #         status__isnull=False
     #         )
-        
+
     #     qs = qs.annotate(
     #         duration=Case(
     #             When(
@@ -247,14 +250,14 @@ class RecordListView(generics.ListAPIView):
     #             output_field=DurationField()
     #         )
     #     )
-        
+
     #     qs = qs.annotate(
     #         at_initial_role=Case(
     #             When(role_level__prev_level__isnull=True, then=Value(True, BooleanField())),
     #             default=Value(False, BooleanField())
     #         )
     #     )
-        
+
     #     if _id:
     #         qs = qs.filter(id=_id)
     #         return qs
@@ -275,13 +278,13 @@ class RecordListView(generics.ListAPIView):
     #     if search:
     #         qs = qs.filter(Q(note_sheet_no__icontains=search))
 
-        
+
     #     if order_by:
     #         if order_by in ['duration', '-duration']:
     #             qs =  qs.order_by(order_by)
 
     #     return qs
-    
+
 
 
 
@@ -334,7 +337,7 @@ class RecordListView(generics.ListAPIView):
                 qs.filter(rejected_by__isnull=False, id=(OuterRef('id')))
             ),
             )
-        
+
         qs = qs.annotate(
             status = Case(
                 When(is_settled=True, then=Value("Settled")),
@@ -345,7 +348,7 @@ class RecordListView(generics.ListAPIView):
         ).filter(
             status__isnull=False
             )
-        
+
         qs = qs.annotate(
             duration=Case(
                 When(
@@ -418,14 +421,14 @@ class RecordListView(generics.ListAPIView):
                 output_field=DurationField()
             )
         )
-        
+
         qs = qs.annotate(
             at_initial_role=Case(
                 When(role_level__prev_level__isnull=True, then=Value(True, BooleanField())),
                 default=Value(False, BooleanField())
             )
         )
-        
+
         if _id:
             qs = qs.filter(id=_id)
             return qs
@@ -446,8 +449,8 @@ class RecordListView(generics.ListAPIView):
         if search:
             qs = qs.filter(Q(note_sheet_no__icontains=search))
 
-        
-        
+
+
 
         qs = qs.order_by('id').distinct('id')
 
@@ -456,16 +459,16 @@ class RecordListView(generics.ListAPIView):
                 qs =  qs.order_by( 'id', order_by)
 
         return qs
-        
-   
 
-        
-   
+
+
+
+
 
 
     def list(self, request, *args, **kwargs):
         serialized_data = RecordListSerializer(self.get_queryset(), many=True).data
-        
+
         is_statistics = request.GET.get('is_statistics')
         status = self.request.GET.get('status')
         _id = self.request.GET.get('id')
@@ -489,8 +492,8 @@ class RecordListView(generics.ListAPIView):
                 logs_data = RecordLogSerializer(logs_qs, many=True).data
                 _data['activity_logs'] = logs_data
                 return Response(_data)
-            
-            return Response({}) 
+
+            return Response({})
 
         if is_statistics:
             status_options = ['Approved', 'Rejected', 'Pending', 'Settled']
@@ -499,7 +502,7 @@ class RecordListView(generics.ListAPIView):
             status_count_dict = {status: 0 for status in status_options}
 
             for item in serialized_data:
-                status = item.get('status') 
+                status = item.get('status')
                 if status in status_count_dict:
                     status_count_dict[status] += 1
 
@@ -514,7 +517,7 @@ class RecordListView(generics.ListAPIView):
             response_data = serialized_data
 
         return Response(response_data)
-        
+
 
 
 
@@ -529,7 +532,7 @@ class RecordRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return RecordRetrieveSerializer
         return RecordSerializer
-    
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context.update({
@@ -566,7 +569,7 @@ class ActionAPIView(APIView):
     def post(self, request, *args, **kwargs):
 
         user = request.user
-        
+
         serializer = ActionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -627,13 +630,13 @@ class ActionAPIView(APIView):
                 FlowPipeLine.objects.filter(workflow=record.workflow).values_list('role', flat=True)
             )
             approved_roles = set(record.approved_by.all().values_list('id', flat=True))
-            
+
             if workflow_roles == approved_roles:
                 record.is_settled = True
                 record.save()
 
-            
-        
+
+
         elif action == 'attached':
             file = data.get('file')
             if file:
@@ -644,12 +647,12 @@ class ActionAPIView(APIView):
                 # print(local_path, relative_path)
                 s3 = S3Storage()
                 res = s3.upload_s3_file(local_source_path=local_path, file_relative_path=relative_path)
-                
+
                 try:
                     os.unlink(local_path)
                 except: pass
 
-            
+
 
         log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
 
@@ -658,7 +661,7 @@ class ActionAPIView(APIView):
             if recordRoleStatusObj:
                 recordRoleStatusObj.is_approved = True if action == 'approved' else False
                 recordRoleStatusObj.save()
-            
+
             else:
                 RecordRoleStatus.objects.create(
                     log=log_instance,
@@ -670,7 +673,7 @@ class ActionAPIView(APIView):
 
         if action == 'approved':
             path = generate_notesheet_report(record)
-                
+
         message = f'You have {action} this document'
         return Response(
             {
@@ -760,7 +763,7 @@ def generate_report_pdf(request):
         record = Record.objects.get(id=record_id)
     except:
         return Response({'statusCode': 404, 'message': 'Record not found'})
-    
+
     department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
 
     if department_obj:
@@ -821,16 +824,16 @@ def generate_report_pdf(request):
     # You now have the URL for the saved PDF
     print("File uploaded to S3:", file_url)
 
-   
-        
+
+
     local_path = os.path.join(settings.PROJECT_ROOT, 'media', file_name)
 
 
-    relative_path = f'media/notesheets/{record_id}/notesheet.pdf' 
+    relative_path = f'media/notesheets/{record_id}/notesheet.pdf'
 
     s3 = S3Storage()
     res = s3.upload_s3_file(local_source_path=local_path, file_relative_path=relative_path)
-    
+
     try:
         os.unlink(local_path)
     except:
@@ -854,7 +857,7 @@ def generate_report_pdf(request):
 
     # return response
 
-    
+
 
 @api_view(['POST'])
 def note_sheet_response(request):

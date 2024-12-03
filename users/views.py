@@ -262,7 +262,3 @@ class UserCreateNew(CreateAPIView):
     serializer_class = UserCreateSerializer
     queryset = User.objects.all()
     parser_classes = [MultiPartParser] 
-    
-        
-
-    
