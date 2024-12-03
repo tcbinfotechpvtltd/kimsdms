@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import DepartmentListView, DocumentCreateAPI, DocumentDeleteAPI, RecordCreateView, RecordListView, RolesListCreateAPIView, RolesRetrieveUpdateDestroyAPIView, SapRecordCreateView, generate_report_pdf
-from .views import RecordRetrieveUpdateDestroyView, ActionAPIView
+from .views import RecordRetrieveUpdateDestroyView, ActionAPIView, note_sheet_response
 
 
 
@@ -14,7 +14,9 @@ urlpatterns = [
     path('delete-document/<int:pk>', DocumentDeleteAPI.as_view(), name='DocumentDeleteAPI'),
     path('departments/', DepartmentListView.as_view(), name='DepartmentListView'),
     path('take-action/', ActionAPIView.as_view(), name='ActionAPIView'),
-    path('generate-report/', generate_report_pdf, name='generate_report_pdf')
+    path('generate-report/', generate_report_pdf, name='generate_report_pdf'),
+    path('view-report/', note_sheet_response, name='note_sheet_response')
+
     
 
 
