@@ -859,4 +859,69 @@ def generate_report_pdf(request):
 
 
 
+@api_view(['POST'])
+def note_sheet_response(request):
+    record_id = request.data.get('record_id')
+
+    try:
+        record = Record.objects.get(id=record_id)
+    except:
+        return Response({'statusCode': 404, 'message': 'Record not found'})
+    
+    department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
+
+    if department_obj:
+        department = department_obj.name
+    else: department = ''
+
+    context = {
+    'note_sheet_no': record.note_sheet_no,
+    "department": department,
+    "po_number": record.po_number,
+    "po_date": record.po_date,
+    "vendor_code": record.vendor_code,
+    "supplier_name": record.supplier_name,
+    "invoice_date": record.invoice_date,
+    "invoice_number": record.invoice_number,
+    "invoice_amount": record.invoice_amount,
+    "total_po_amount": record.total_po_amount,
+    "amount_to_be_paid": record.amount_to_be_paid,
+    "advance_amount": record.advance_amount,
+    "tds_amount": record.tds_amount,
+    'curr_date': str(datetime.now().date()),
+    'approved_users': RecordRoleStatus.objects.filter(record=record, is_approved=True).annotate(
+        first_name = F('log__created_by__first_name'),
+        last_name = F('log__created_by__last_name'),
+        date = F('log__created_at'),
+        photo=Concat(
+        Value(settings.MEDIA_URL),
+        F('log__created_by__signature'),
+        output_field=CharField()
+        ),
+        role_name = F('role__role_name')
+    ).values(
+        'first_name', 'last_name', 'date', 'photo', 'role_name'
+    )
+    }
+
+    print(context)
+
+    # Load the HTML template from a file using render_to_string
+    rendered_html = render_to_string('report.html', context)
+
+    # Convert rendered HTML to PDF
+    pdf_file = io.BytesIO()  # Use in-memory file
+    HTML(string=rendered_html).write_pdf(pdf_file)
+
+    # Move the buffer's position back to the beginning
+    pdf_file.seek(0)
+
+    # Create the HTTP response with the PDF content
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="document.pdf"'
+
+    return response
+
+    
+
 

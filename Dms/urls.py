@@ -44,5 +44,7 @@ urlpatterns = [
 ] + [
 
     path('users/', include('users.urls')),
-    path('organizations/', include('organization.urls'))
+    path('organizations/', include('organization.urls')),
+    path('notifications/', include('notification_app.urls'))
+
 ]
