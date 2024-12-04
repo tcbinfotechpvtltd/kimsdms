@@ -867,7 +867,7 @@ def note_sheet_response(request):
         record = Record.objects.get(id=record_id)
     except:
         return Response({'statusCode': 404, 'message': 'Record not found'})
-    
+
     department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
 
     if department_obj:
@@ -922,6 +922,6 @@ def note_sheet_response(request):
 
     return response
 
-    
+
 
 
