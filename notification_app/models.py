@@ -78,7 +78,10 @@ class Notification(models.Model):
     @classmethod
     def send_notification(cls, title, description, recipients, module):
         notification_obj = Notification.create_notification_object(title, description, recipients, module)
-        Notification.send_notifications_on_socket(notification_obj, notification_obj.recipients.all())
+        try:
+            Notification.send_notifications_on_socket(notification_obj, notification_obj.recipients.all())
+        except:
+            pass
 
 
 

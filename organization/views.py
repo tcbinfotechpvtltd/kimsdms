@@ -5,10 +5,10 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
-from notification_app.models import RecordFollowupUser
+from notification_app.models import Notification, RecordFollowupUser
 from organization.permissions import authenticate_access_key
 from organization.utils import generate_notesheet_report
-from users.models import RecordLog
+from users.models import RecordLog, User
 from users.serializers import RecordLogSerializer
 from .models import FlowPipeLine, RecordDocument, RecordRoleStatus, Roles
 from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer, UpdateRecordSerializer
@@ -587,9 +587,9 @@ class ActionAPIView(APIView):
         action = data['action']
         record = data['record']
         comment = data.get('comment')
-        followup_user_ids = data.get('followup_user_ids')
+        followup_users = data.get('followup_user_ids')
 
-        print("followup_user_ids: ", followup_user_ids)
+        print("followup_users: ", followup_users)
 
 
         doc = None
@@ -645,8 +645,36 @@ class ActionAPIView(APIView):
                 log_instance = RecordLog.objects.create(
                     record=record, action=action, comment=comment, created_by=user, doc=doc
                     )
-                if len(followup_user_ids) > 0:
-                    log_instance.followup_users.set(followup_user_ids)
+                notification_user_ids = []
+                if len(followup_users) > 0:
+                    log_instance.followup_users.set(followup_users)
+
+                    notification_user_ids = [
+                        user.id for user in followup_users
+                    ]
+
+                    try:
+                        master_dept = followup_users[0].roles.all()[0].master_department
+                        hod_role = Roles.objects.filter(master_department=master_dept, is_hod=True).first()
+                        if hod_role:
+                            hod_user = User.objects.filter(roles=hod_role).first()
+                            log_instance.followup_user_hod = hod_user
+                            log_instance.save()
+                            notification_user_ids.append(hod_user.id)
+                    except:
+                        pass
+
+                    if notification_user_ids:
+                        Notification.send_notification(
+                            title=f'{record.record_name} follow up notification from {user.get_full_name()}', 
+                            description=comment, 
+                            module="Record Followup", 
+                            recipients=notification_user_ids
+                        )
+
+               
+
+                    
                 
 
         if action == 'approved':
