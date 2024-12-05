@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import  RecordDocument, Record, Organization, Roles, DepartMent, RecordRoleStatus, Workflow, WorkFlowLog, FlowPipeLine
+from .models import  RecordDocument, Record, Organization, Roles, DepartMent, RecordRoleStatus, Workflow, WorkFlowLog, FlowPipeLine, MasterDepartment
 
 admin.site.register(RecordDocument)
 admin.site.register(Record)
@@ -34,7 +34,8 @@ class WorkFlowLogAdmin(admin.ModelAdmin):
     list_display = ['id', 'flow_pipe_line', 'record', 'status', 'user']
     list_filter = ['user', 'record', 'status']
 
-
-
-
-
+@admin.register(MasterDepartment)
+class MasterDepartmentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['name']

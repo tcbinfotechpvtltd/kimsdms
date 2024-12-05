@@ -11,7 +11,7 @@ class Organization(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
+
 
 class DepartMent(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='org_depts')
@@ -22,10 +22,19 @@ class DepartMent(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
 
 
-    
+
+class MasterDepartment(models.Model):
+    name = models.CharField(max_length=500)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        verbose_name = "M Department"
+        verbose_name_plural = "M Departments"
 
 
 class Roles(TimeStamp):
@@ -33,6 +42,8 @@ class Roles(TimeStamp):
     role_name = models.CharField(max_length=100)
     prev_level = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='next_level')
     is_active = models.BooleanField(default=True)
+    is_hod = models.BooleanField(default=False)
+    master_department = models.ForeignKey(MasterDepartment, on_delete=models.SET_NULL, null=True, blank=True, related_name="depart_roles")
 
 
     def __str__(self) -> str:
@@ -80,7 +91,7 @@ class Record(TimeStamp):
     invoice_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Invoice Amount", null=True, blank=True)
     total_po_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Total PO Amount", null=True, blank=True)
     amount_to_be_paid = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Amount to be Paid", null=True, blank=True)
-    
+
     # Fields for auto-fetched data (placeholders, can be populated based on external SAP integration)
     advance_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Advance Amount (auto-fetch from SAP)")
     tds_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="TDS Amount (auto-fetch from SAP)")
@@ -109,7 +120,7 @@ class Record(TimeStamp):
 
         if self.id:
             self.note_sheet_no = f'sap-sheet-{self.id}'
-            super().save(update_fields=['note_sheet_no']) 
+            super().save(update_fields=['note_sheet_no'])
 
 
 
@@ -123,7 +134,7 @@ class RecordDocument(CreatorUpdator):
     file_size = models.FloatField(null=True, blank=True)
     file_name = models.CharField(max_length=200, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
-    
+
 
 
 
@@ -140,7 +151,7 @@ class WorkFlowLog(models.Model):
         ('pending', 'pending'),
         ('approved', 'approved'),
         ('rejected', 'rejected'),
-
+        ('commented', 'commented'),
     )
     flow_pipe_line = models.OneToOneField(FlowPipeLine, on_delete=models.CASCADE)
     record = models.ForeignKey(Record, on_delete=models.CASCADE)

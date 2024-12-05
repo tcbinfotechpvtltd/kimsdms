@@ -16,14 +16,14 @@ class Notification(models.Model):
 
     def __str__(self) -> str:
         return self.title
-    
+
 
     @classmethod
     def create_notification_object(cls, title, description, recipients, module):
         instance = cls.objects.create(module=module, title=title, description=description)
         instance.recipients.set(recipients)
         return instance
-    
+
     @classmethod
     def send_notifications_on_socket(cls, notification_obj, recipient_users):
         from notification_app.serializers import NotificationDataSerializer
@@ -31,7 +31,7 @@ class Notification(models.Model):
         channel_layer = get_channel_layer()
 
         print(channel_layer)
-        
+
         notification_data = json.dumps(
             {
             "code": 200,
@@ -80,7 +80,7 @@ class Notification(models.Model):
         notification_obj = Notification.create_notification_object(title, description, recipients, module)
         Notification.send_notifications_on_socket(notification_obj, notification_obj.recipients.all())
 
-    
+
 
 class NotificationRecipient(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -90,10 +90,13 @@ class NotificationRecipient(models.Model):
 
     def __str__(self) -> str:
             return f"{self.notification}/{self.user}/{self.is_seen}"
-    
-    
 
 
+class RecordFollowupUser(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="record_followups")
+    record = models.ForeignKey("organization.Record", on_delete=models.CASCADE, related_name="record_followups")
+    record_log = models.ForeignKey("users.RecordLog", on_delete=models.CASCADE, related_name="record_followups")
+    hod_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="hod_record_followups")
 
-
-
+    def __str__(self):
+        return f"RFU-U{self.user.id}-R{self.record.id}-RL{self.recorld_log}-{self.id}"

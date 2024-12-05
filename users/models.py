@@ -34,7 +34,6 @@ class RecordLog(CreatorUpdator, TimeStamp):
         ('edited', 'edited'),
         ('commented', 'commented'),
         ('attached', 'attached')
-
     )
     record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='logs')
     doc = models.ForeignKey(RecordDocument, on_delete=models.CASCADE, related_name='logs_doc', null=True, blank=True)
