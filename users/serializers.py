@@ -118,6 +118,9 @@ class UserSlimSerializer(serializers.ModelSerializer):
 class RecordLogSerializer(serializers.ModelSerializer):
 
     created_by = UserSlimSerializer()
+
+    followup_users = UserSlimSerializer(many=True)
+    followup_user_hod = UserSlimSerializer()
     
     class Meta:
         model = RecordLog
