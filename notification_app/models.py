@@ -97,6 +97,3 @@ class RecordFollowupUser(models.Model):
     record = models.ForeignKey("organization.Record", on_delete=models.CASCADE, related_name="record_followups")
     record_log = models.ForeignKey("users.RecordLog", on_delete=models.CASCADE, related_name="record_followups")
     hod_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="hod_record_followups")
-
-    def __str__(self):
-        return f"RFU-U{self.user.id}-R{self.record.id}-RL{self.recorld_log}-{self.id}"

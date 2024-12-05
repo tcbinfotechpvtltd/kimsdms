@@ -39,5 +39,7 @@ class RecordLog(CreatorUpdator, TimeStamp):
     doc = models.ForeignKey(RecordDocument, on_delete=models.CASCADE, related_name='logs_doc', null=True, blank=True)
     action = models.CharField(choices=ACTIONS)
     comment = models.TextField(null=True, blank=True)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    followup_users = models.ManyToManyField(User, null=True, blank=True, related_name='followup_user_logs')
+    followup_user_hod = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='followup_user_hod_logs')
+    
 

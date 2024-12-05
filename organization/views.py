@@ -5,6 +5,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from Dms.common.mixins import SoftDeleteMixin
+from notification_app.models import RecordFollowupUser
 from organization.permissions import authenticate_access_key
 from organization.utils import generate_notesheet_report
 from users.models import RecordLog
@@ -297,6 +298,7 @@ class RecordListView(generics.ListAPIView):
         search = self.request.GET.get('search')
         _id = self.request.GET.get('id')
         order_by = self.request.GET.get('order_by')
+        is_followup = self.request.GET.get('is_followup')
 
 
         user = self.request.user
@@ -449,7 +451,14 @@ class RecordListView(generics.ListAPIView):
         if search:
             qs = qs.filter(Q(note_sheet_no__icontains=search))
 
+        
+        if is_followup:
+            followup_record_ids = RecordLog.objects.filter(
+                action='commented', followup_users=user
+            ).values_list('record_id', flat=True)
 
+            qs = qs.filter(id__in=followup_record_ids)
+            
 
 
         qs = qs.order_by('id').distinct('id')
@@ -578,6 +587,10 @@ class ActionAPIView(APIView):
         action = data['action']
         record = data['record']
         comment = data.get('comment')
+        followup_user_ids = data.get('followup_user_ids')
+
+        print("followup_user_ids: ", followup_user_ids)
+
 
         doc = None
 
@@ -613,17 +626,28 @@ class ActionAPIView(APIView):
         #         record.rejected_by = approve_reject_by
         #         record.save()
 
-        elif action == 'rejected':
-            if record.role_level:
-                record.approved_by.clear() # clearing all approves
-                approve_reject_by = record.role_level
-                pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
-                if pipeline and hasattr(pipeline, 'wf_prev_level'):
-                    initial_pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, wf_prev_level__isnull=True).first()
-                    record.role_level = initial_pipeline.role # shifting it to initial role
-                record.rejected_by = approve_reject_by
-                record.save()
+        # elif action == 'rejected':
+        #     if record.role_level:
+        #         record.approved_by.clear() # clearing all approves
+        #         approve_reject_by = record.role_level
+        #         pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
+        #         if pipeline and hasattr(pipeline, 'wf_prev_level'):
+        #             initial_pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, wf_prev_level__isnull=True).first()
+        #             record.role_level = initial_pipeline.role # shifting it to initial role
+        #         record.rejected_by = approve_reject_by
+        #         record.save()
 
+
+        elif action == 'commented':
+            if record.role_level:
+                approve_reject_by = record.role_level
+                # pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
+                log_instance = RecordLog.objects.create(
+                    record=record, action=action, comment=comment, created_by=user, doc=doc
+                    )
+                if len(followup_user_ids) > 0:
+                    log_instance.followup_users.set(followup_user_ids)
+                
 
         if action == 'approved':
             workflow_roles = set(
@@ -653,10 +677,11 @@ class ActionAPIView(APIView):
                 except: pass
 
 
+        if action != 'commented':
+            log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
 
-        log_instance = RecordLog.objects.create(record=record, action=action, comment=comment, created_by=user, doc=doc)
-
-        if action in ['approved', 'rejected']:
+        # if action in ['approved', 'rejected']:
+        if action == 'approved':
             recordRoleStatusObj = RecordRoleStatus.objects.filter(record=record, role=approve_reject_by).first()
             if recordRoleStatusObj:
                 recordRoleStatusObj.is_approved = True if action == 'approved' else False

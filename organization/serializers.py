@@ -274,7 +274,12 @@ class ActionSerializer(serializers.Serializer):
     # File is optional
     file = serializers.FileField(required=False, allow_null=True)
 
+    followup_user_ids = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True, required=False, many=True)
+
     def validate(self, data):
+
+        print(data)
+        
         """
         Custom validation if certain actions require comment or file.
         For example, 'commented' action must have a comment.
