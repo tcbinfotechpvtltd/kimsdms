@@ -240,6 +240,14 @@ AWS_QUERYSTRING_AUTH = False
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 #
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'   # Here I am using gmail smtp server 
+EMAIL_PORT = 587       # gmail smtp server port
+EMAIL_HOST_USER = 'techtcbinfotech@gmail.com' 
+EMAIL_HOST_PASSWORD = 'cntrtbgmtesfsofr' # For gmail use app password
+EMAIL_USE_TLS = True     # for SSL communication use EMAIL_USE_SSL
+
+
 
 
 
