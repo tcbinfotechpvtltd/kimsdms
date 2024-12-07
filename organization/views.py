@@ -33,6 +33,10 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 
 
 
@@ -684,10 +688,27 @@ class ActionAPIView(APIView):
                             module="Record Followup", 
                             recipients=notification_user_ids
                         )
+                    context = {
+                        "receiver_name": user.get_full_name(),
+                        "comment": comment
+                    }
 
-               
+                    receiver_email = user.email
+                    template_name = "email_template.html"
+                    convert_to_html_content =  render_to_string(
+                        template_name=template_name,
+                        context=context
+                        )
+                    plain_message = strip_tags(convert_to_html_content)
 
-                    
+                    yo_send_it = send_mail(
+                        subject="KIMS DMS ACTION",
+                        message=plain_message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[receiver_email],   # recipient_list is self explainatory
+                        html_message=convert_to_html_content,
+                        fail_silently=True    # Optional
+                    )
                 
 
         # if action == 'approved':
