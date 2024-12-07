@@ -470,6 +470,8 @@ class RecordListView(generics.ListAPIView):
         if order_by:
             if order_by in ['duration', '-duration']:
                 qs =  qs.order_by( 'id', order_by)
+        else:
+            qs =  qs.order_by( '-id')
 
         return qs
 
@@ -611,13 +613,24 @@ class ActionAPIView(APIView):
 
         if action == 'approved':
             if record.role_level:
-                approve_reject_by = record.role_level
-                pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
+                approved_by = record.role_level
+
+                pipeline = record.current_pipe_line
+                # pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
                 if pipeline and hasattr(pipeline, 'wf_next_level'):
+                        
                     next_pipe_line = pipeline.wf_next_level
-                    next_role = next_pipe_line.role
+                    if next_pipe_line.role.is_hod and next_pipe_line.role.is_parent:
+                        next_role = Roles.objects.filter(is_hod=True, parent_role=next_pipe_line.role, store_department__sloc=record.department_sloc).first()
+                    else:
+                        next_role = next_pipe_line.role
                     record.role_level = next_role
-                record.approved_by.add(approve_reject_by)
+                    record.current_pipe_line = next_pipe_line
+
+                else:
+                    record.is_settled = True
+
+                record.approved_by.add(approved_by)
                 record.rejected_by = None
                 record.save()
 
@@ -658,8 +671,8 @@ class ActionAPIView(APIView):
                     ]
 
                     try:
-                        master_dept = followup_users[0].roles.all()[0].master_department
-                        hod_role = Roles.objects.filter(master_department=master_dept, is_hod=True).first()
+
+                        hod_role = Roles.objects.filter(store_department__sloc=record.department_sloc, is_hod=True).first()
                         if hod_role:
                             hod_user = User.objects.filter(roles=hod_role).first()
                             log_instance.followup_user_hod = hod_user
@@ -698,15 +711,15 @@ class ActionAPIView(APIView):
                     )
                 
 
-        if action == 'approved':
-            workflow_roles = set(
-                FlowPipeLine.objects.filter(workflow=record.workflow).values_list('role', flat=True)
-            )
-            approved_roles = set(record.approved_by.all().values_list('id', flat=True))
+        # if action == 'approved':
+        #     workflow_roles = set(
+        #         FlowPipeLine.objects.filter(workflow=record.workflow).values_list('role', flat=True)
+        #     )
+        #     approved_roles = set(record.approved_by.all().values_list('id', flat=True))
 
-            if workflow_roles == approved_roles:
-                record.is_settled = True
-                record.save()
+        #     if workflow_roles == approved_roles:
+        #         record.is_settled = True
+        #         record.save()
 
 
 
