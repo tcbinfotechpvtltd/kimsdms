@@ -611,9 +611,12 @@ class ActionAPIView(APIView):
         #         record.rejected_by = None
         #         record.save()
 
+        approved_by_role = None
+
         if action == 'approved':
             if record.role_level:
                 approved_by = record.role_level
+                approved_by_role = approved_by
 
                 pipeline = record.current_pipe_line
                 # pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
@@ -753,7 +756,7 @@ class ActionAPIView(APIView):
                 RecordRoleStatus.objects.create(
                     log=log_instance,
                     record=record,
-                    role=record.role_level,
+                    role=approved_by_role,
                     is_approved = True if action == 'approved' else False
                 )
 
