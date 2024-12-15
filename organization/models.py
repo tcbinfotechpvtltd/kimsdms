@@ -44,6 +44,9 @@ class Roles(TimeStamp):
     is_active = models.BooleanField(default=True)
     is_hod = models.BooleanField(default=False)
     master_department = models.ForeignKey(MasterDepartment, on_delete=models.SET_NULL, null=True, blank=True, related_name="depart_roles")
+    store_department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
+    parent_role = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='child_roles')
+    is_parent = models.BooleanField(default=False)
 
 
     def __str__(self) -> str:
@@ -107,6 +110,8 @@ class Record(TimeStamp):
     phase = models.PositiveIntegerField(null=True, blank=True)
     data_source = models.CharField(max_length=100, null=True, blank=True)
     workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
+    current_pipe_line = models.ForeignKey(FlowPipeLine, on_delete=models.SET_NULL, null=True, blank=True)
+    
 
     def __str__(self):
         return f"PO {self.po_number} - {self.supplier_name} ({self.id})"

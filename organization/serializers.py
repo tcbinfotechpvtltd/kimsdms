@@ -88,7 +88,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'note_sheet_url',
             'duration',
             'phase',
-            'data_source'
+            'data_source',
+            'created_at'
         ]
 
 
@@ -247,6 +248,7 @@ class SapRecordSerializer(serializers.ModelSerializer):
 
         validated_data['organization'] = organization
         validated_data['role_level'] = role
+        validated_data['current_pipe_line'] = initial_pipeline
 
 
         return super().create(validated_data)
