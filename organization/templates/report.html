@@ -18,6 +18,12 @@
                 height: auto;
                 margin-right: 20px; /* Add space between the image and the text */
             }
+            .wrap{
+                max-width: 100px; /* Set a maximum width for the cell */
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                white-space: normal;
+            }
 
             .header-text {
                 flex-grow: 1;
@@ -178,13 +184,13 @@
             </tr>
             <tr>
                 <td>1</td>
-                <td>{{invoice_number}}</td>
-                <td>{{invoice_date}}</td>
-                <td>{{invoice_amount}}</td>
-                <td>{{po_number}}</td>
-                <td>{{po_date}}</td>
-                <td>{{vendor_code}}</td>
-                <td></td>
+                <td class="wrap">{{invoice_number}}</td>
+                <td class="wrap">{{invoice_date}}</td>
+                <td class="wrap">{{invoice_amount}}</td>
+                <td class="wrap">{{po_number}}</td>
+                <td class="wrap">{{po_date}}</td>
+                <td class="wrap">{{vendor_code}}</td>
+                <td class="wrap"></td>
             </tr>
         </table>
 
@@ -230,7 +236,7 @@
             {% for user in approved_users %}
             <tr>
                 <td></td>
-                <td>{{user.first_name}} {{user.last_name}}</td>
+                <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
                 <td></td>
                 <td>{{user.role_name}}</td>
                 <td></td>

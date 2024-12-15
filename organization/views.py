@@ -510,22 +510,34 @@ class RecordListView(generics.ListAPIView):
 
         if is_statistics:
             status_options = ['Approved', 'Rejected', 'Pending', 'Settled']
-            priority_counts = {'High-Priority': 0}
+            departments = set(item.get('department_sloc') for item in serialized_data if item.get('department_sloc'))
 
-            status_count_dict = {status: 0 for status in status_options}
+            response_data = []
+            department_name= None
+            for department in departments:
+                # Initialize counters for the current department
+                status_count_dict = {status: 0 for status in status_options}
+                priority_counts = {'High-Priority': 0}
 
-            for item in serialized_data:
-                status = item.get('status')
-                if status in status_count_dict:
-                    status_count_dict[status] += 1
+                # Filter and process data for the current department
+                for item in serialized_data:
+                    if item.get('department_sloc') == department:
+                        department_name = item.get('department_name')
+                        status = item.get('status')
+                        if status in status_count_dict:
+                            status_count_dict[status] += 1
 
-                if item.get('priority') == 'high' and item.get('status') =="Pending":
-                    priority_counts['High-Priority'] += 1
+                        if item.get('priority') == 'high' and item.get('status') == "Pending":
+                            priority_counts['High-Priority'] += 1
 
-            response_data = {
-                'status_counts': status_count_dict,
-                'high_priority_count': priority_counts['High-Priority'],
-            }
+                # Append the results for this department
+                response_data.append({
+                    'department': department,
+                    'department_name': department_name,
+                    'status_counts': status_count_dict,
+                    'high_priority_count': priority_counts['High-Priority'],
+                })
+            
         else:
             response_data = serialized_data
 

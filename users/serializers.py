@@ -75,7 +75,6 @@ class UserSerializer(serializers.ModelSerializer):
         # Check if email is unique
         username = data.get('username')
         email = data.get('email')
-        print("username==>",username)
         # Check for existing username
         if User.objects.filter(username=username).exclude(id=self.instance.id if self.instance else None).exists():
             raise serializers.ValidationError({"username": "This username is already in use."})
@@ -178,7 +177,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         # Check if email is unique
         username = data.get('username')
         email = data.get('email')
-        print("username==>",username)
         # # Check for existing username
         # if User.objects.filter(username=username).exclude(id=self.instance.id if self.instance else None).exists():
         #     raise serializers.ValidationError({"username": "This username is already in use."})
