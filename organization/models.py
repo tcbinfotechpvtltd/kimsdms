@@ -47,6 +47,8 @@ class Roles(TimeStamp):
     store_department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
     parent_role = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='child_roles')
     is_parent = models.BooleanField(default=False)
+    can_update_fields = models.BooleanField(default=False)
+    update_allowed_fields = models.JSONField(null=True, blank=True)
 
 
     def __str__(self) -> str:
