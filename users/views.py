@@ -117,7 +117,9 @@ class UserDetail(RetrieveAPIView):
             {
                 "id": role["id"],
                 "role_name": role["role_name"],
-                'is_initial_role': True if role['prev_level'] is None else False
+                'is_initial_role': True if role['prev_level'] is None else False,
+                'can_update_fields': role['can_update_fields'],
+                'update_allowed_fields': role['update_allowed_fields']
             }
             for role in user_roles
         ]
