@@ -112,7 +112,7 @@ class UserDetail(RetrieveAPIView):
         user = self.get_object()
         
         # Get user roles and construct roles data
-        user_roles = user.roles.values('id', 'role_name', 'prev_level')
+        user_roles = user.roles.values('id', 'role_name', 'prev_level', 'can_update_fields', 'update_allowed_fields')
         roles_data = [
             {
                 "id": role["id"],
