@@ -37,7 +37,8 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-
+from django.views import View
+from django.shortcuts import render
 
 
 class DepartmentListView(generics.ListAPIView):
@@ -455,14 +456,14 @@ class RecordListView(generics.ListAPIView):
         if search:
             qs = qs.filter(Q(note_sheet_no__icontains=search))
 
-        
+
         if is_followup:
             followup_record_ids = RecordLog.objects.filter(
                 action='commented', followup_users=user
             ).values_list('record_id', flat=True)
 
             qs = qs.filter(id__in=followup_record_ids)
-            
+
 
 
         qs = qs.order_by('id').distinct('id')
@@ -539,7 +540,7 @@ class RecordListView(generics.ListAPIView):
                     'status_counts': status_count_dict,
                     'high_priority_count': priority_counts['High-Priority'],
                 })
-            
+
         else:
             response_data = serialized_data
 
@@ -633,7 +634,7 @@ class ActionAPIView(APIView):
                 pipeline = record.current_pipe_line
                 # pipeline = FlowPipeLine.objects.filter(workflow=record.workflow, role=record.role_level).first()
                 if pipeline and hasattr(pipeline, 'wf_next_level'):
-                        
+
                     next_pipe_line = pipeline.wf_next_level
                     if next_pipe_line.role.is_hod and next_pipe_line.role.is_parent:
                         next_role = Roles.objects.filter(is_hod=True, parent_role=next_pipe_line.role, store_department__sloc=record.department_sloc).first()
@@ -698,9 +699,9 @@ class ActionAPIView(APIView):
 
                     if notification_user_ids:
                         Notification.send_notification(
-                            title=f'{record.record_name} follow up notification from {user.get_full_name()}', 
-                            description=comment, 
-                            module="Record Followup", 
+                            title=f'{record.record_name} follow up notification from {user.get_full_name()}',
+                            description=comment,
+                            module="Record Followup",
                             recipients=notification_user_ids
                         )
                     context = {
@@ -724,7 +725,7 @@ class ActionAPIView(APIView):
                         html_message=convert_to_html_content,
                         fail_silently=True    # Optional
                     )
-                
+
 
         # if action == 'approved':
         #     workflow_roles = set(
@@ -1024,6 +1025,80 @@ def note_sheet_response(request):
 
     return response
 
+class ReportPDFView(View):
+    def get(self, request, record_id):
+        # record_id = request.data.get("record_id")
 
+        try:
+            record = Record.objects.get(id=record_id)
+        except Exception:
+            return Response({"statusCode": 404, "message": "Record not found"})
 
+        department_obj = DepartMent.objects.filter(sloc=record.department_sloc).first()
 
+        if department_obj:
+            department = department_obj.name
+        else:
+            department = ""
+
+        context = {
+            "note_sheet_no": record.note_sheet_no,
+            "department": department,
+            "po_number": record.po_number,
+            "po_date": record.po_date,
+            "vendor_code": record.vendor_code,
+            "supplier_name": record.supplier_name,
+            "invoice_date": record.invoice_date,
+            "invoice_number": record.invoice_number,
+            "invoice_amount": record.invoice_amount,
+            "total_po_amount": record.total_po_amount,
+            "amount_to_be_paid": record.amount_to_be_paid,
+            "advance_amount": record.advance_amount,
+            "tds_amount": record.tds_amount,
+            "curr_date": str(datetime.now().date()),
+            "approved_users": [],
+        }
+
+        approved_users = (
+            RecordRoleStatus.objects.filter(
+                record=record,
+                is_approved=True,
+            )
+            .annotate(
+                first_name=F("log__created_by__first_name"),
+                last_name=F("log__created_by__last_name"),
+                date=F("log__created_at"),
+                photo=Concat(
+                    Value(settings.MEDIA_URL),
+                    F("log__created_by__signature"),
+                    output_field=CharField(),
+                ),
+                role_name=F("role__role_name"),
+                department=F("role__master_department__name"),
+            )
+            .values(
+                "first_name",
+                "last_name",
+                "date",
+                "photo",
+                "role_name",
+                "department",
+            )
+        )
+
+        dept_map_approved_users = {}
+        wo_dept_map_approved_users = []
+        for approved_user in approved_users:
+            department = approved_user.get("department")
+            if department:
+                temp = dept_map_approved_users.get(department, [])
+                temp.append(approved_user)
+                dept_map_approved_users[department] = temp
+            else:
+                wo_dept_map_approved_users.append(approved_user)
+
+        context["dept_map_approved_users"] = dept_map_approved_users
+        context["wo_dept_map_approved_users"] = wo_dept_map_approved_users
+        context["departments"] = list(dept_map_approved_users.keys())
+
+        return render(request, "report-print.html", context=context)
