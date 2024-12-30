@@ -6,6 +6,7 @@
                 font-family: Arial, sans-serif;
                 margin: 0;
                 padding: 0;
+                font-size: 12px !important;
             }
             .header-container {
                 display: flex;
@@ -19,7 +20,7 @@
                 margin-right: 20px; /* Add space between the image and the text */
             }
             .wrap{
-                max-width: 70px; /* Set a maximum width for the cell */
+                max-width: 60px; /* Set a maximum width for the cell */
                 word-wrap: break-word;
                 overflow-wrap: break-word;
                 white-space: normal;
@@ -35,16 +36,24 @@
                 width: 100%;
                 max-width: 100%;
                 overflow-x: auto;
+                border-collapse: collapse !important;
+            }
+            tr, th, td{
+                border-collapse: collapse !important;
             }
 
+
             th, td {
-                border: 1px solid black;
-                padding: 7px;
+                border: 1px solid #c2c2c2;
+                padding: 4px 3px;
                 text-align: left;
+                border-collapse: collapse !important;
             }
 
             th {
                 background-color: #f2f2f2;
+                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
             }
 
             .single-line {
@@ -109,149 +118,201 @@
                 border: 1px solid #ccc; /* Optional: Adds a subtle border */
                 border-radius: 5px; /* Optional: Makes the corners rounded */
             }
-            
+
+            .sales-invoice-table{
+                /*border-top-style: double;*/
+                border-top-width: 1px;
+            }
+
         </style>
     </head>
     <body>
         <div class="header-container">
-        <img src="https://kims-dms-docs.s3.ap-south-1.amazonaws.com/media/kims_logo_left.png" class="img-left"/>
+        <img src="https://kims-dms-docs.s3.ap-south-1.amazonaws.com/media/kims_logo_left.png" class="img-left" style="width: 80px !important;"/>
         <div class="header-text">
-            <h2><u>NOTE SHEET FOR PAYMENT/ACCOUNTING OF INVOICES</u></h2>
-            <h3 style="text-align: center;">(KIMS)</h3>
+            <h2 style="margin: 0.25rem 0 0.25rem 0;">
+                <u>NOTE SHEET FOR PAYMENT/ACCOUNTING OF INVOICES</u>
+            </h2>
+            <h3 style="text-align: center;margin: 0.25rem 0 0.25rem 0;">(KIMS)</h3>
         </div>
-        <img src="https://kims-dms-docs.s3.ap-south-1.amazonaws.com/media/kims_logo_right.png" class="img-right" height="81px" width="100px"/>
+        <img src="https://kims-dms-docs.s3.ap-south-1.amazonaws.com/media/kims_logo_right.png" class="img-right" style="width: 80px !important; object-fit: cover; height: 100%;"/>
     </div>
 
-        <table>
-            <tr>
-                <th class="single-line">1. Note Sheet No</th>
-                <td>{{note_sheet_no}}</td>
-            </tr>
-        </table>
 
-        <table>
-            <tr>
-                <th class="single-line">2. Date of Note Sheet</th>
-                <td>{{curr_date}}</td>
-            </tr>
-        </table>
+    <table style="margin-bottom: 15px !important;">
+        <tr>
+            <th class="single-line" colspan="6">1. Note Sheet No</th>
+            <td colspan="2">{{note_sheet_no}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">2. Date of Note Sheet</th>
+            <td colspan="2">{{curr_date}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">3. Name of School</th>
+            <td colspan="2">KIMS PBMH HOSPITAL</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">3. Name of Department</th>
+            <td colspan="2">{{department}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">4. Item of Purchase/Expense</th>
+            <td colspan="2"></td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">5. Name of Supplier</th>
+            <td colspan="2">{{supplier_name}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="8" style="border-bottom: 0px !important;">6. Details of Invoices & P.O.</th>
+            <!-- <td colspan="2"></td> -->
+        </tr>
+        <tr>
+            <th class="sales-invoice-table" style="width: 40px;">SI. No.</th>
+            <th class="wrap sales-invoice-table">Invoices No.</th>
+            <th class="wrap sales-invoice-table">Invoice Date</th>
+            <th class="wrap sales-invoice-table">Inv Amt (Rs.)</th>
+            <th class="wrap sales-invoice-table">P.O. No.</th>
+            <th class="wrap sales-invoice-table">P.O. Date</th>
+            <th class="wrap sales-invoice-table" style="max-width: 100px !important; width: 100px !important;">Vendor Code</th>
+            <th class="wrap sales-invoice-table" style="max-width: 100px !important; width: 100px !important;">REMARKS</th>
 
-        <table>
-            <tr>
-                <th class="single-line">3. Name of School</th>
-                <td>KIMS PBMH HOSPITAL</td>
-            </tr>
-        </table>
+        </tr>
+        <tr>
+            <th>1</th>
+            <td class="wrap">{{invoice_number}}</td>
+            <td class="wrap">{{invoice_date}}</td>
+            <td class="wrap">{{invoice_amount}}</td>
+            <td class="wrap">{{po_number}}</td>
+            <td class="wrap">{{po_date}}</td>
+            <td class="wrap" style="max-width: 100px !important; width: 100px !important;">{{vendor_code}}</td>
+            <td class="wrap" style="max-width: 100px !important; width: 100px !important;"></td>
+        </tr>
+        <tr>
+            <th class="middle-line" colspan="6">Total Amount (In Rs.)</th>
+            <td colspan="2">{{total_po_amount}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">7. TDS Amount To Be Deducted (In Rs.)</th>
+            <td colspan="2">{{tds_amount}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">8. Advance Amount Already Paid (In Rs.)</th>
+            <td colspan="2">{{advance_amount}}</td>
+        </tr>
+        <tr>
+            <th class="single-line" colspan="6">9. Net Amount To Be Paid (In Rs.)</th>
+            <td colspan="2">{{amount_to_be_paid}}</td>
+        </tr>
+    </table>
 
-        <table>
-            <tr>
-                <th class="single-line">3. Name of Department</th>
-                <td>{{department}}</td>
-            </tr>
-        </table>
+    {% if dept_map_approved_users %}
+    {% for department__, approved_users in dept_map_approved_users.items %}
+    <!-- <p style="margin: 4px 0 4px 0 !important; font-weight: 600 !important; font-size: 14px !important; font-style: italic;">{{department}}</p> -->
+    <table {% if department__ != departments|last %}style="margin-bottom: 10px;"{% endif %}>
+        <tr>
+            <td colspan="4">
+                <span style="display: block !important;font-style: italic; text-align: center;font-weight: 600; font-size: 14px !important;">{{department__}}</span>
+            </td>
+        </tr>
+        <tr>
+            <th style="width: 20%;">Name</th>
+            <th style="width: 40%;">Designation</th>
+            <th style="width: 20%;">Signature</th>
+            <th style="width: 20%;">Date</th>
+        </tr>
 
-        <table>
-            <tr>
-                <th class="single-line">4. Item of purchase/expense</th>
-                <td></td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="single-line">5. Name of Supplier</th>
-                <td>{{supplier_name}}</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="single-line">6. Details of Invoices & P.O.</th>
-                <td></td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th>SI. No.</th>
-                <th class="wrap">Invoices No.</th>
-                <th class="wrap">Invoice Date</th>
-                <th class="wrap">Invoice Amount (In Rs.)</th>
-                <th class="wrap">P.O. No.</th>
-                <th class="wrap">P.O. Date</th>
-                <th class="wrap">Vendor Code</th>
-                <th class="wrap">REMARKS</th>
-            </tr>
-            <tr>
-                <td>1</td>
-                <td class="wrap">{{invoice_number}}</td>
-                <td class="wrap">{{invoice_date}}</td>
-                <td class="wrap">{{invoice_amount}}</td>
-                <td class="wrap">{{po_number}}</td>
-                <td class="wrap">{{po_date}}</td>
-                <td class="wrap">{{vendor_code}}</td>
-                <td class="wrap"></td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="middle-line">Total Amount (In Rs.)</th>
-                <td>{{total_po_amount}}</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="single-line">7. TDS Amount To Be Deducted (In Rs.)</th>
-                <td>{{tds_amount}}</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="single-line">8. Advance Amount Already Paid (In Rs.)</th>
-                <td>{{advance_amount}}</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th class="single-line">9. Net Amount To Be Paid (In Rs.)</th>
-                <td>{{amount_to_be_paid}}</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr>
-                <th></th>
-                <th>Name</th>
-                <th></th>
-                <th>Designation</th>
-                <th></th>
-                <th>Signature</th>
-                <th></th>
-                <th>Date</th>
-            </tr>
-            {% for user in approved_users %}
-            <tr>
-                <td></td>
-                <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
-                <td></td>
-                <td>{{user.role_name}}</td>
-                <td></td>
-                {% if user.photo %}
-                <td>
-                    <img src="{{ user.photo }}" alt="Signature image" class='signature-image'/>
-                </td>
+        {% for user in approved_users %}
+        <tr>
+            <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
+            <td>
+                {% if user.designation %}
+                {{user.designation}}
                 {% else %}
-                    <td>Signed by {{user.first_name}}</td>
+                -
                 {% endif %}
+            </td>
+            {% if user.photo %}
+            <td>
+                <img src="{{ user.photo }}" alt="Signature image" class='signature-image' style="object-fit: cover; height: 50%;"/>
+            </td>
+            {% else %}
+                <td>Signed by {{user.first_name}}</td>
+            {% endif %}
 
-                <td></td>
-                <td>{{user.date}}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </body>
+            <td>{{user.date}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+    {% endif %}
+    {% if wo_dept_map_approved_users %}
+    <table {% if dept_map_approved_users %}style="margin-top: 10px;"{% endif %}>
+        <tr>
+            <th style="width: 20%;">Name</th>
+            <th style="width: 40%;">Designation</th>
+            <th style="width: 20%;">Signature</th>
+            <th style="width: 20%;">Date</th>
+        </tr>
+
+        {% for user in wo_dept_map_approved_users %}
+        <tr>
+            <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
+            <td>
+                {% if user.designation %}
+                {{user.designation}}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+            {% if user.photo %}
+            <td>
+                <img src="{{ user.photo }}" alt="Signature image" class='signature-image' style="object-fit: cover; height: 50%;"/>
+            </td>
+            {% else %}
+                <td>Signed by {{user.first_name}}</td>
+            {% endif %}
+
+            <td>{{user.date}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+
+    {% comment %}
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>Signature</th>
+            <th>Date</th>
+        </tr>
+
+        {% for user in approved_users %}
+        <tr>
+            <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
+            <td>
+                {% if user.designation %}
+                {{user.designation}}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+            {% if user.photo %}
+            <td>
+                <img src="{{ user.photo }}" alt="Signature image" class='signature-image' style="object-fit: cover; height: 50%;"/>
+            </td>
+        {% else %}
+            <td>Signed by {{ user.first_name }}</td>
+        {% endif %}
+
+            <td>{{user.date}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endcomment %}
+
+</body>
 </html>

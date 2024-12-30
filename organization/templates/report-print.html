@@ -138,6 +138,7 @@
         <img src="https://kims-dms-docs.s3.ap-south-1.amazonaws.com/media/kims_logo_right.png" class="img-right" style="width: 80px !important; object-fit: cover; float: left; height: 100%;"/>
     </div>
 
+
         <table style="margin-bottom: 15px !important;">
             <tr>
                 <th class="single-line" colspan="6">1. Note Sheet No</th>
@@ -226,13 +227,13 @@
             <tr>
                 <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
                 <td>
-                    {% if user.role_name %}
-                    {{user.role_name}}
+                    {% if user.designation %}
+                    {{user.designation}}
                     {% else %}
                     -
                     {% endif %}
                 </td>
-                {% if user.photo.url %}
+                {% if user.photo %}
                 <td>
                     <img src="{{ user.photo }}" alt="Signature image" class='signature-image'/>
                 </td>
@@ -259,13 +260,13 @@
             <tr>
                 <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
                 <td>
-                    {% if user.role_name %}
-                    {{user.role_name}}
+                    {% if user.designation %}
+                    {{user.designation}}
                     {% else %}
                     -
                     {% endif %}
                 </td>
-                {% if user.photo.url %}
+                {% if user.photo %}
                 <td>
                     <img src="{{ user.photo }}" alt="Signature image" class='signature-image'/>
                 </td>
@@ -293,13 +294,13 @@
             <tr>
                 <td class="wrap">{{user.first_name}} {{user.last_name}}</td>
                 <td>
-                    {% if user.role_name %}
-                    {{user.role_name}}
+                    {% if user.designation %}
+                    {{user.designation}}
                     {% else %}
                     -
                     {% endif %}
                 </td>
-                {% if user.photo.url %}
+                {% if user.photo %}
                 <td>
                     <img src="{{ user.photo }}" alt="Signature image" class='signature-image'/>
                 </td>

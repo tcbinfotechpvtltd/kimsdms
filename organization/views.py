@@ -888,21 +888,47 @@ def generate_report_pdf(request):
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
     'curr_date': str(datetime.now().date()),
-    'approved_users': RecordRoleStatus.objects.filter(record=record, is_approved=True).annotate(
-        first_name = F('log__created_by__first_name'),
-        last_name = F('log__created_by__last_name'),
-        date = F('log__created_at'),
-        photo=Concat(
-        Value(settings.MEDIA_URL),
-        F('log__created_by__signature'),
-        output_field=CharField()
-        ),
-        role_name = F('role__role_name')
-    ).values(
-        'first_name', 'last_name', 'date', 'photo', 'role_name'
-    )
+    'approved_users': []
     }
+    approved_users = (
+            RecordRoleStatus.objects.filter(
+                record=record,
+                is_approved=True,
+            )
+            .annotate(
+                first_name=F("log__created_by__first_name"),
+                last_name=F("log__created_by__last_name"),
+                date=F("log__created_at"),
+                photo=F("log__created_by__signature"),
+                designation=F("log__created_by__designation"),
+                role_name=F("role__role_name"),
+                department=F("role__master_department__name"),
+            )
+            .values(
+                "first_name",
+                "last_name",
+                "date",
+                "photo",
+                "designation",
+                "role_name",
+                "department",
+            )
+        )
 
+    dept_map_approved_users = {}
+    wo_dept_map_approved_users = []
+    for approved_user in approved_users:
+        department = approved_user.get("department")
+        if department:
+            temp = dept_map_approved_users.get(department, [])
+            temp.append(approved_user)
+            dept_map_approved_users[department] = temp
+        else:
+            wo_dept_map_approved_users.append(approved_user)
+
+    context["dept_map_approved_users"] = dept_map_approved_users
+    context["wo_dept_map_approved_users"] = wo_dept_map_approved_users
+    context["departments"] = list(dept_map_approved_users.keys())
     print(context)
 
     # Load the HTML template from a file using render_to_string
@@ -914,9 +940,6 @@ def generate_report_pdf(request):
 
     # Move the buffer's position back to the beginning
     pdf_file.seek(0)
-
-
-
     ##############################################
     file_name = f'notesheets/{time.time()}.pdf'
 
@@ -992,21 +1015,47 @@ def note_sheet_response(request):
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
     'curr_date': str(datetime.now().date()),
-    'approved_users': RecordRoleStatus.objects.filter(record=record, is_approved=True).annotate(
-        first_name = F('log__created_by__first_name'),
-        last_name = F('log__created_by__last_name'),
-        date = F('log__created_at'),
-        photo=Concat(
-        Value(settings.MEDIA_URL),
-        F('log__created_by__signature'),
-        output_field=CharField()
-        ),
-        role_name = F('role__role_name')
-    ).values(
-        'first_name', 'last_name', 'date', 'photo', 'role_name'
-    )
+    'approved_users': []
     }
+    approved_users = (
+            RecordRoleStatus.objects.filter(
+                record=record,
+                is_approved=True,
+            )
+            .annotate(
+                first_name=F("log__created_by__first_name"),
+                last_name=F("log__created_by__last_name"),
+                date=F("log__created_at"),
+                photo=F("log__created_by__signature"),
+                designation=F("log__created_by__designation"),
+                role_name=F("role__role_name"),
+                department=F("role__master_department__name"),
+            )
+            .values(
+                "first_name",
+                "last_name",
+                "date",
+                "photo",
+                "designation",
+                "role_name",
+                "department",
+            )
+        )
 
+    dept_map_approved_users = {}
+    wo_dept_map_approved_users = []
+    for approved_user in approved_users:
+        department = approved_user.get("department")
+        if department:
+            temp = dept_map_approved_users.get(department, [])
+            temp.append(approved_user)
+            dept_map_approved_users[department] = temp
+        else:
+            wo_dept_map_approved_users.append(approved_user)
+
+    context["dept_map_approved_users"] = dept_map_approved_users
+    context["wo_dept_map_approved_users"] = wo_dept_map_approved_users
+    context["departments"] = list(dept_map_approved_users.keys())
     print(context)
 
     # Load the HTML template from a file using render_to_string
@@ -1068,11 +1117,8 @@ class ReportPDFView(View):
                 first_name=F("log__created_by__first_name"),
                 last_name=F("log__created_by__last_name"),
                 date=F("log__created_at"),
-                photo=Concat(
-                    Value(settings.MEDIA_URL),
-                    F("log__created_by__signature"),
-                    output_field=CharField(),
-                ),
+                photo=F("log__created_by__signature"),
+                designation=F("log__created_by__designation"),
                 role_name=F("role__role_name"),
                 department=F("role__master_department__name"),
             )
@@ -1081,6 +1127,7 @@ class ReportPDFView(View):
                 "last_name",
                 "date",
                 "photo",
+                "designation",
                 "role_name",
                 "department",
             )
