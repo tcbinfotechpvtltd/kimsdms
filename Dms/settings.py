@@ -247,7 +247,7 @@ EMAIL_HOST_USER = 'techtcbinfotech@gmail.com'
 EMAIL_HOST_PASSWORD = 'cntrtbgmtesfsofr' # For gmail use app password
 EMAIL_USE_TLS = True     # for SSL communication use EMAIL_USE_SSL
 
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
 
 
 
