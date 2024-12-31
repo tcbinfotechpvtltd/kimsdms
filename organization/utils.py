@@ -128,3 +128,24 @@ def generate_notesheet_report(record):
 
     return absolute_path
 
+
+
+
+# def crete_role():
+#     from organization.models import DepartMent, Roles
+    
+
+#     role_objs = []
+
+#     for dep in DepartMent.objects.all().exclude(sloc='C237'):
+#         role_objs.append(
+#             Roles(
+#             organization_id=1, is_hod=True, parent_role_id=5, store_department=dep, is_active=True, role_name=f"{dep.name} HOD"
+#         )
+#         )
+
+    
+#     if role_objs:
+#         Roles.objects.bulk_create(role_objs, ignore_conflicts=True)
+
+
