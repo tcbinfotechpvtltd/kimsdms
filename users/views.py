@@ -219,6 +219,7 @@ class UserUpdate(UpdateAPIView):
         signature = request.FILES.get('signature')
         contact = request.data.get('contact')
         role_ids = request.data.get('role_ids', [])
+        designation = request.data.get('designation')
 
         # Upload files to S3 and update URLs in user instance
         if photo:
@@ -232,6 +233,8 @@ class UserUpdate(UpdateAPIView):
             user.signature = self.upload_to_s3(signature, signature_path)
         if contact:
             user.contact = contact
+        if designation:
+            user.designation = designation
         if role_ids:
             if isinstance(role_ids, str):
                 role_ids = json.loads(role_ids)
