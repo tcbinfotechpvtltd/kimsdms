@@ -110,14 +110,29 @@
                 border-radius: 5px; /* Optional: Makes the image corners rounded */
             } {% endcomment %}
 
-            .signature-image {
+            {% comment %} .signature-image {
                 width: 100%; /* Ensures the image stretches to the full width of the container */
                 height: 100%; /* Ensures the image stretches to the full height of the container */
                 object-fit: cover; /* Ensures the image covers the container without distortion */
                 display: block; /* Removes inline spacing issues */
                 border: 1px solid #ccc; /* Optional: Adds a subtle border */
                 border-radius: 5px; /* Optional: Makes the corners rounded */
+            } {% endcomment %}
+
+            .signature-image {
+                max-width: 250px; /* Limits the width to 300px or any preferred size */
+                max-height: 50px; /* Limits the height to 150px or any preferred size */
+                width: auto; /* Ensures the width adjusts automatically to preserve aspect ratio */
+                height: auto; /* Ensures the height adjusts automatically to preserve aspect ratio */
+                object-fit: contain; /* Ensures the image fits within the container without cropping */
+                display: block; /* Removes inline spacing issues */
+                margin: 0 auto; /* Centers the image horizontally */
+                {% comment %} border: 1px solid #ccc; /* Optional: Adds a subtle border */ {% endcomment %}
+                {% comment %} border-radius: 5px; /* Optional: Makes the corners rounded */ {% endcomment %}
+                padding: 1px; /* Optional: Adds padding around the image */
+                {% comment %} box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */ {% endcomment %}
             }
+            
 
             .sales-invoice-table{
                 /*border-top-style: double;*/
