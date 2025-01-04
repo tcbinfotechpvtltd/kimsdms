@@ -314,5 +314,6 @@ class UpdateRecordSerializer(serializers.ModelSerializer):
             "id",
             "advance_amount",
             "tds_amount",
-            "amount_to_be_paid"
+            "amount_to_be_paid",
+            'item_of_purchase',
         ]
