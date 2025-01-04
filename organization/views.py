@@ -436,6 +436,10 @@ class RecordListView(generics.ListAPIView):
             )
         )
 
+        qs = qs.annotate(
+            current_state = F('role_level__role_name')
+        )
+
         if _id:
             qs = qs.filter(id=_id)
             return qs

@@ -62,6 +62,7 @@ class RecordListSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField()
     at_initial_role = serializers.BooleanField()
     duration = serializers.DurationField()
+    current_state = serializers.CharField()
     class Meta:
         model = Record
         fields = [
@@ -89,7 +90,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'duration',
             'phase',
             'data_source',
-            'created_at'
+            'created_at',
+            'current_state'
         ]
 
 
