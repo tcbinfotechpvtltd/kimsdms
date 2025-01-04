@@ -96,7 +96,8 @@ class Record(TimeStamp):
     invoice_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Invoice Amount", null=True, blank=True)
     total_po_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Total PO Amount", null=True, blank=True)
     amount_to_be_paid = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Amount to be Paid", null=True, blank=True)
-
+    item_of_purchase = models.TextField(null=True, blank=True)
+    
     # Fields for auto-fetched data (placeholders, can be populated based on external SAP integration)
     advance_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Advance Amount (auto-fetch from SAP)")
     tds_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="TDS Amount (auto-fetch from SAP)")

@@ -436,6 +436,10 @@ class RecordListView(generics.ListAPIView):
             )
         )
 
+        qs = qs.annotate(
+            current_state = F('role_level__role_name')
+        )
+
         if _id:
             qs = qs.filter(id=_id)
             return qs
@@ -1104,6 +1108,7 @@ class ReportPDFView(View):
             "amount_to_be_paid": record.amount_to_be_paid,
             "advance_amount": record.advance_amount,
             "tds_amount": record.tds_amount,
+            'item_of_purchase': record.item_of_purchase,
             "curr_date": str(datetime.now().date()),
             "approved_users": [],
         }
