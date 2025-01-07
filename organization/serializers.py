@@ -91,7 +91,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'phase',
             'data_source',
             'created_at',
-            'current_state'
+            'current_state',
+            'item_of_purchase'
         ]
 
 
