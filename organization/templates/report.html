@@ -100,18 +100,18 @@
                 }
             }
             {% comment %} .signature-image {
-                max-width: 200px; /* Limit the width to 100px */
-                max-height: 200px; /* Limit the height to 100px */
+                max-width: 100px; /* Limit the width to 100px */
+                max-height: 100px; /* Limit the height to 100px */
                 min-width: 100px; /* Limit the width to 100px */
                 min-height: 100px; /* Limit the height to 100px */
                 display: block; /* Ensures proper spacing */
-                margin-left: 10px; /* Centers the image horizontally if within a block container */
+                margin: auto; /* Centers the image horizontally if within a block container */
                 border: 1px solid #ccc; /* Adds a subtle border */
                 border-radius: 5px; /* Optional: Makes the image corners rounded */
             } {% endcomment %}
 
             {% comment %} .signature-image {
-                width: 50%; /* Ensures the image stretches to the full width of the container */
+                width: 100%; /* Ensures the image stretches to the full width of the container */
                 height: 100%; /* Ensures the image stretches to the full height of the container */
                 object-fit: cover; /* Ensures the image covers the container without distortion */
                 display: block; /* Removes inline spacing issues */
@@ -120,14 +120,13 @@
             } {% endcomment %}
 
             .signature-image {
-                max-width: 350px; /* Limits the width to 300px or any preferred size */
+                max-width: 250px; /* Limits the width to 300px or any preferred size */
                 max-height: 50px; /* Limits the height to 150px or any preferred size */
                 width: auto; /* Ensures the width adjusts automatically to preserve aspect ratio */
                 height: auto; /* Ensures the height adjusts automatically to preserve aspect ratio */
                 object-fit: contain; /* Ensures the image fits within the container without cropping */
                 display: block; /* Removes inline spacing issues */
-                margin: 10px 0 10px 0;
-                padding: 1px;
+                margin: 0 auto; /* Centers the image horizontally */
                 {% comment %} border: 1px solid #ccc; /* Optional: Adds a subtle border */ {% endcomment %}
                 {% comment %} border-radius: 5px; /* Optional: Makes the corners rounded */ {% endcomment %}
                 padding: 1px; /* Optional: Adds padding around the image */
@@ -234,8 +233,8 @@
         <tr>
             <th style="width: 25%;">Name</th>
             <th style="width: 20%;">Designation</th>
-            <th style="width: 32%;">Signature</th>
-            <th style="width: 23%;">Date</th>
+            <th style="width: 35%;">Signature</th>
+            <th style="width: 20%;">Date</th>
         </tr>
 
         {% for user in approved_users %}
@@ -267,8 +266,8 @@
         <tr>
             <th style="width: 25%;">Name</th>
             <th style="width: 20%;">Designation</th>
-            <th style="width: 32%;">Signature</th>
-            <th style="width: 23%;">Date</th>
+            <th style="width: 35%;">Signature</th>
+            <th style="width: 20%;">Date</th>
         </tr>
 
         {% for user in wo_dept_map_approved_users %}
