@@ -105,15 +105,15 @@
                 min-width: 100px; /* Limit the width to 100px */
                 min-height: 100px; /* Limit the height to 100px */
                 display: block; /* Ensures proper spacing */
-                margin: auto; /* Centers the image horizontally if within a block container */
+                margin: 0 auto; /* Centers the image horizontally if within a block container */
                 border: 1px solid #ccc; /* Adds a subtle border */
                 border-radius: 5px; /* Optional: Makes the image corners rounded */
             } {% endcomment %}
 
             {% comment %} .signature-image {
-                width: 100%; /* Ensures the image stretches to the full width of the container */
-                height: 100%; /* Ensures the image stretches to the full height of the container */
-                object-fit: cover; /* Ensures the image covers the container without distortion */
+                width: 100px; /* Ensures the image stretches to the full width of the container */
+                height: 50px; /* Ensures the image stretches to the full height of the container */
+                object-fit: contain; /* Ensures the image fits within the container without distortion */
                 display: block; /* Removes inline spacing issues */
                 border: 1px solid #ccc; /* Optional: Adds a subtle border */
                 border-radius: 5px; /* Optional: Makes the corners rounded */
