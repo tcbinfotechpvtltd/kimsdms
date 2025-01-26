@@ -92,7 +92,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'data_source',
             'created_at',
             'current_state',
-            'item_of_purchase'
+            'item_of_purchase',
+            'utr_number'
         ]
 
 
@@ -258,6 +259,12 @@ class SapRecordSerializer(serializers.ModelSerializer):
 
 
 
+class SapRecordUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Record
+        fields = ['utr_number', 'note_sheet_no']
+
+
 class ActionSerializer(serializers.Serializer):
     ACTIONS = (
         ('approved', 'approved'),
@@ -317,4 +324,5 @@ class UpdateRecordSerializer(serializers.ModelSerializer):
             "tds_amount",
             "amount_to_be_paid",
             'item_of_purchase',
+            'remark'
         ]

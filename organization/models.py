@@ -22,6 +22,15 @@ class DepartMent(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+
+class Plant(models.Model):
+    name = models.CharField(max_length=500)
+    sloc = models.CharField(max_length=50, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 
@@ -87,6 +96,7 @@ class Record(TimeStamp):
     priority = models.CharField(choices=priority_choices, default='med')
     # department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
     department_sloc = models.CharField(max_length=50, null=True, blank=True)
+    # plant_sloc = models.CharField(max_length=50, null=True, blank=True)
     po_number = models.CharField(max_length=50, verbose_name="PO Number", null=True, blank=True)
     po_date = models.DateField(verbose_name="PO Date", null=True, blank=True)
     vendor_code = models.CharField(max_length=50, verbose_name="Vendor Code", null=True, blank=True)
@@ -107,6 +117,10 @@ class Record(TimeStamp):
     approved_by = models.ManyToManyField(Roles, related_name='approved_docs')
     rejected_by = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_docs')
     is_settled = models.BooleanField(default=False)
+    utr_number = models.CharField(max_length=200, null=True, blank=True)
+    utr_generated_at = models.DateTimeField(null=True, blank=True)
+    remark = models.TextField(null=True, blank=True)
+    is_locked = models.BooleanField(default=False)
 
     note_sheet_url = models.URLField(null=True, blank=True)
     record_name = models.CharField(max_length=300, null=True, blank=True)
