@@ -93,7 +93,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'created_at',
             'current_state',
             'item_of_purchase',
-            'utr_number'
+            'utr_number',
+            'remark'
         ]
 
 
