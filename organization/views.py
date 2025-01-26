@@ -11,7 +11,7 @@ from organization.utils import generate_notesheet_report
 from users.models import RecordLog, User
 from users.serializers import RecordLogSerializer
 from .models import FlowPipeLine, RecordDocument, RecordRoleStatus, Roles
-from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer, UpdateRecordSerializer
+from .serializers import ActionSerializer, DocumentSerializer, RecordListSerializer, RecordRetrieveSerializer, RolesSerializer, SapRecordSerializer, SapRecordUpdateSerializer, UpdateRecordSerializer
 from .models import Record, DepartMent
 from .serializers import RecordSerializer, DepartmentSerializer
 from django_filters import rest_framework as filters
@@ -79,6 +79,27 @@ class SapRecordCreateView(generics.CreateAPIView):
         if is_success:
             return super().create(request, *args, **kwargs)
         return resp
+    
+
+class SAPRecordUpdateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    queryset = Record.objects.all()
+    serializer_class = SapRecordUpdateSerializer
+
+    def post(self, request, *args, **kwargs):
+        is_success, resp = authenticate_access_key(request)
+        if is_success:
+            serlizer = self.get_serializer(data=request.data)
+            serlizer.is_valid(raise_exception=True)
+            utr_number = serlizer.validated_data.get('utr_number')
+            notsheet_no = serlizer.validated_data.get('note_sheet_no')
+            obj = Record.objects.filter(note_sheet_no=notsheet_no).update(utr_number=utr_number, is_locked=True, utr_generated_at=timezone.now())
+            if obj:
+                return Response({'status': 200, 'message': 'Record updated successfully'})
+            else:
+                return Response({'status': 400, 'message': 'Record not found'})
+        return resp
+        
 
 
 
@@ -346,11 +367,12 @@ class RecordListView(generics.ListAPIView):
             )
 
         qs = qs.annotate(
-            status = Case(
+             status=Case(
+                When(Q(is_locked=True) & Q(is_settled=True), then=Value("Settled and Locked")),
                 When(is_settled=True, then=Value("Settled")),
-                When(is_pending=True, then=Value('Pending')),
-                When(is_approved=True, then=Value('Approved')),
-                When(is_rejected=True, then=Value('Rejected')),
+                When(is_pending=True, then=Value("Pending")),
+                When(is_approved=True, then=Value("Approved")),
+                When(is_rejected=True, then=Value("Rejected")),
             )
         ).filter(
             status__isnull=False
@@ -420,6 +442,14 @@ class RecordListView(generics.ListAPIView):
                             action='approved'
                         ).order_by('-created_at').values('created_at')[:1]
                 ),
+                output_field=DurationField()
+                )
+                ),
+                When(
+                    Q(status='Settled and Locked'),
+                    then=ExpressionWrapper(
+                    timezone.now() - F('utr_generated_at')
+                    ,
                 output_field=DurationField()
                 )
                 ),
@@ -516,7 +546,7 @@ class RecordListView(generics.ListAPIView):
             return Response({})
 
         if is_statistics:
-            status_options = ['Approved', 'Rejected', 'Pending', 'Settled']
+            status_options = ['Approved', 'Rejected', 'Pending', 'Settled', 'Settled and Locked']
             departments = set(item.get('department_sloc') for item in serialized_data if item.get('department_sloc'))
 
             response_data = []
