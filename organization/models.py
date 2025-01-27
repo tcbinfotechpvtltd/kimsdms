@@ -24,9 +24,9 @@ class DepartMent(models.Model):
         return self.name
     
 
-class Plant(models.Model):
+class PlantMasterSuperitandent(models.Model):
     name = models.CharField(max_length=500)
-    sloc = models.CharField(max_length=50, null=True, blank=True)
+    plnt = models.CharField(max_length=50, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
@@ -56,6 +56,8 @@ class Roles(TimeStamp):
     store_department = models.ForeignKey(DepartMent, on_delete=models.CASCADE, null=True, blank=True)
     parent_role = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='child_roles')
     is_parent = models.BooleanField(default=False)
+    plnt_superitendent = models.ForeignKey(PlantMasterSuperitandent, on_delete=models.CASCADE, null=True, blank=True)
+    is_plnt_supper = models.BooleanField(default=False)
     can_update_fields = models.BooleanField(default=False)
     update_allowed_fields = models.JSONField(null=True, blank=True)
 

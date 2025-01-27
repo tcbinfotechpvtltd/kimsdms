@@ -672,6 +672,11 @@ class ActionAPIView(APIView):
                     next_pipe_line = pipeline.wf_next_level
                     if next_pipe_line.role.is_hod and next_pipe_line.role.is_parent:
                         next_role = Roles.objects.filter(is_hod=True, parent_role=next_pipe_line.role, store_department__sloc=record.department_sloc).first()
+                    elif next_pipe_line.role.is_parent and next_pipe_line.role.is_plnt_supper:
+                        dept = DepartMent.objects.filter(sloc=record.department_sloc).first()
+                        if dept:
+                            next_role = Roles.objects.filter(is_plnt_supper=True, parent_role=next_pipe_line.role, plnt_superitendent__plnt=dept.plnt).first()
+
                     else:
                         next_role = next_pipe_line.role
                     record.role_level = next_role
