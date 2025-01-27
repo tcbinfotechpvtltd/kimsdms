@@ -1,12 +1,18 @@
 from django.contrib import admin
 
-from .models import  RecordDocument, Record, Organization, Roles, DepartMent, RecordRoleStatus, Workflow, WorkFlowLog, FlowPipeLine, MasterDepartment
+from .models import  RecordDocument, Record, Organization, Roles, DepartMent, RecordRoleStatus, Workflow, WorkFlowLog, FlowPipeLine, MasterDepartment, PlantMasterSuperitandent
 
 admin.site.register(RecordDocument)
 admin.site.register(Record)
 admin.site.register(Organization)
 admin.site.register(Roles)
 admin.site.register(RecordRoleStatus)
+
+@admin.register(PlantMasterSuperitandent)
+class PlantMasterSuperitandentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'plnt', 'is_active']
+    list_filter = ['is_active', 'plnt']
+    search_fields = ['name']
 
 @admin.register(DepartMent)
 class DepartmentAdmin(admin.ModelAdmin):
