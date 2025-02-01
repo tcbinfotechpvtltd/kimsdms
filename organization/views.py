@@ -925,6 +925,7 @@ def generate_report_pdf(request):
     "total_po_amount": record.total_po_amount,
     "amount_to_be_paid": record.amount_to_be_paid,
     "advance_amount": record.advance_amount,
+    "remarks": record.remark,
     "tds_amount": record.tds_amount,
     'curr_date': str(datetime.now().date()),
     'approved_users': []
@@ -1051,6 +1052,7 @@ def note_sheet_response(request):
     "invoice_amount": record.invoice_amount,
     "total_po_amount": record.total_po_amount,
     "amount_to_be_paid": record.amount_to_be_paid,
+    "remarks": record.remark,
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
     'curr_date': str(datetime.now().date()),
@@ -1128,7 +1130,6 @@ class ReportPDFView(View):
             department = department_obj.name
         else:
             department = ""
-
         context = {
             "note_sheet_no": record.note_sheet_no,
             "department": department,
@@ -1144,6 +1145,7 @@ class ReportPDFView(View):
             "advance_amount": record.advance_amount,
             "tds_amount": record.tds_amount,
             'item_of_purchase': record.item_of_purchase,
+            "remarks": record.remark,
             "curr_date": str(datetime.now().date()),
             "approved_users": [],
         }

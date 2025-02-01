@@ -40,6 +40,7 @@ def generate_notesheet_report(record):
     "amount_to_be_paid": record.amount_to_be_paid,
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
+    "remarks": record.remark,
     'curr_date': str(datetime.now().date()),
     'approved_users': []
     }
