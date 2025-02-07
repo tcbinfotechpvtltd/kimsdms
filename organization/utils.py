@@ -41,7 +41,7 @@ def generate_notesheet_report(record):
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
     "remarks": record.remark,
-    'curr_date': str(datetime.now().date()),
+    'curr_date': str(datetime.now().date().strftime("%d-%m-%Y")),
     'approved_users': []
     }
     approved_users = (

@@ -927,7 +927,7 @@ def generate_report_pdf(request):
     "advance_amount": record.advance_amount,
     "remarks": record.remark,
     "tds_amount": record.tds_amount,
-    'curr_date': str(datetime.now().date()),
+    'curr_date': str(datetime.now().date().strftime("%d-%m-%Y")),
     'approved_users': []
     }
     approved_users = (
@@ -1055,7 +1055,7 @@ def note_sheet_response(request):
     "remarks": record.remark,
     "advance_amount": record.advance_amount,
     "tds_amount": record.tds_amount,
-    'curr_date': str(datetime.now().date()),
+    'curr_date': str(datetime.now().date().strftime("%d-%m-%Y")),
     'approved_users': []
     }
     approved_users = (
@@ -1146,7 +1146,7 @@ class ReportPDFView(View):
             "tds_amount": record.tds_amount,
             'item_of_purchase': record.item_of_purchase,
             "remarks": record.remark,
-            "curr_date": str(datetime.now().date()),
+            "curr_date": str(datetime.now().date().strftime("%d-%m-%Y")),
             "approved_users": [],
         }
 
